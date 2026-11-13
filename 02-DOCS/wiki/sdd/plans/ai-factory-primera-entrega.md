@@ -36,7 +36,7 @@ Al comenzar un paso, el ejecutor consultará la excepción del proyecto y, en su
 
 Entregar las referencias de la tarea de A, la revisión fallida y su repetición, los registros de ejecución de ambos proyectos y la prueba final. Contrastar la duración de la espera con las horas registradas. Anotar los tiempos observados antes de proponer límites de rendimiento. Los cambios de implementación se revisarán en ramas y pull requests con las comprobaciones en verde.
 
-## T001 · Recorrido de referencia (en curso)
+## T001 · Recorrido de referencia (cerrado)
 
 **Proyecto A confirmado:** este fork. La tarea real elegida para la demostración es T002, «Registrar proyectos y leer sus fichas y referencias desde el servicio local». Se dará por entregada al poder abrir dos tareas con el mismo nombre en proyectos diferentes y conservar la última lectura fechada si se pierde acceso a uno. Deberán quedar vinculados el resultado de la prueba y el cambio revisado. Registrar su entrada y los intentos desde el comienzo de T002.
 
@@ -62,3 +62,5 @@ Se ejecutaron dos revisiones documentales independientes con Codex CLI 0.167.0-a
 **Cómo reproducir el contraste.** En los registros locales de esos intentos, calcular SHA-256 del texto UTF-8 del identificador de turno, sin salto de línea. Unir el contexto del turno con el evento de finalización por ese identificador. El campo de modelo del contexto coincide con el parámetro de arranque. El evento de finalización aporta el intervalo y el resultado. En estos dos turnos no se encontró un campo de respuesta que identifique independientemente el modelo servido. La salida pública de este documento conserva solo las huellas y los datos de la tabla.
 
 **Criterio para T004.** Conservar por intento la asignación y el recibo de la respuesta del proveedor que identifique el modelo utilizado, vinculados por el identificador de respuesta y el turno. Si intervienen varias respuestas, asociarlas por separado al intento. Verificar el recibo en una ejecución real del adaptador antes de marcar el modelo como confirmado. El valor solicitado, la ausencia de un aviso de cambio de modelo y la declaración del propio asistente son insuficientes. Hasta disponer de ese recibo, el tablero mostrará el modelo solicitado y «Sin registrar» en el campo de uso confirmado.
+
+**Cierre de T001.** A y B están identificados, T002 tiene un criterio de cierre y las dos revisiones documentales terminaron. La confirmación independiente del modelo de cada revisión queda pendiente para **T004**. Sus dos valores siguen siendo «Sin registrar».
