@@ -1,3 +1,5 @@
+import { readFile } from 'node:fs/promises';
+import { tablero } from './tablero.mjs';
 import { createServer } from 'node:http';
 import { leerProyectos } from './proyectos.mjs';
 
@@ -14,9 +16,20 @@ const servicio = createServer(async (req, res) => {
   if (req.method !== 'GET') return responder(405, 'Solo lectura');
   const ruta = req.url.split('?')[0];
   const detalle = ruta.match(/^\/proyectos\/([^/]+)\/tareas\/([^/]+)\/(evidencia|historial)$/);
-  if (!detalle && ruta !== '/proyectos') return responder(404, 'Ruta desconocida');
+  if (!detalle && !['/', '/tablero.css', '/actualizar.js', '/proyectos'].includes(ruta)) return responder(404, 'Ruta desconocida');
   try {
+    if (ruta === '/tablero.css' || ruta === '/actualizar.js') {
+      const css = await readFile(new URL('.' + ruta, import.meta.url));
+      res.writeHead(200, { 'Content-Type':ruta.endsWith('.css') ? 'text/css; charset=utf-8' : 'text/javascript; charset=utf-8' });
+      return res.end(css);
+    }
     const proyectos = await leerProyectos(config, almacen);
+    if (ruta === '/') {
+      const html = tablero(proyectos, new URL(req.url, 'http://127.0.0.1').searchParams);
+      res.writeHead(200, { 'Content-Type':'text/html; charset=utf-8', 'Cache-Control':'no-store',
+        'Content-Security-Policy': "default-src 'none'; style-src 'self'; script-src 'self'; connect-src 'self'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'" });
+      return res.end(html);
+    }
     if (!detalle) return responder(200, proyectos.map(p => ({ ...p, tareas: p.tareas.map(({ evidencia, historial, ...t }) => ({
       ...t, consulta: '/proyectos/' + encodeURIComponent(p.proyecto) + '/tareas/' + encodeURIComponent(t.id) + '/evidencia',
       historial: '/proyectos/' + encodeURIComponent(p.proyecto) + '/tareas/' + encodeURIComponent(t.id) + '/historial'

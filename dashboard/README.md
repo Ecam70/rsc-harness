@@ -24,3 +24,11 @@ Desde la raíz del fork, ejecutar una revisión con la lista local de proyectos 
     python3 dashboard/revisar.py "$HOME/Library/Application Support/ai-factory-t002/proyectos.json" A T002 t002.md
 
 Las reglas están en dashboard/reglas-modelos.json. Se leen una vez al inicio de cada intento. La excepción del proyecto tiene prioridad para el paso revision. El recibo JSON se imprime en la salida estándar; el código 2 indica que el identificador del modelo recibido no se pudo confirmar o difiere del solicitado. Los recibos solo contienen datos seleccionados y huellas. El texto completo del diagnóstico del proceso no forma parte del recibo.
+
+## Tablero y detalle (T005)
+
+Abre la raíz del servicio en el navegador. El filtro de proyecto conserva la identidad de las fichas. «Requieren mi decisión» selecciona estados que mencionan aprobación, decisión o intervención del usuario. La espera más antigua se calcula entre las tareas en espera con fecha conocida. El tablero consulta los cambios cada 15 segundos mientras está visible y el usuario no tiene un control enfocado.
+
+La ficha cerrada con evidencia se muestra en Salida; una revisión superada por sí sola sigue en Verificación. Los movimientos se interpretan en el orden registrado. Un paso desconocido con nombre propio aparece en «Sin clasificar». Las fichas en curso sin movimientos aparecen en Ejecución con el paso sin registrar. La hora de lectura del proyecto nunca se usa para calcular cuánto lleva una tarea en un paso. Para cancelaciones y bloqueos se pueden declarar motivo y responsable en la cabecera de la ficha.
+
+En el detalle se muestran la fuente, los intentos, las fechas y los registros de evidencia. Los recibos JSON referenciados bajo pruebas/ del proyecto o evidencias/ de la carpeta de fichas se presentan con una selección de sus campos.

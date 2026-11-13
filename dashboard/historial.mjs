@@ -1,5 +1,5 @@
 // Cada línea de la sección Transiciones es un movimiento observado por quien ejecuta la tarea.
-export function reconstruirIntentos(ficha) {
+export function leerRecorrido(ficha) {
   const seccion = ficha.split(/^## Transiciones[ \t]*$/im)[1]?.split(/^#{1,2} /m)[0];
   const intentos = new Map();
   const movimientos = new Map();
@@ -21,5 +21,9 @@ export function reconstruirIntentos(ficha) {
     if (!intentos.has(clave)) intentos.set(clave, { paso, intento, movimientos: [] });
     intentos.get(clave).movimientos.push(movimiento);
   }
-  return [...intentos.values()];
+  return { intentos: [...intentos.values()], movimientos: [...movimientos.values()].map(firma => JSON.parse(firma)) };
+}
+
+export function reconstruirIntentos(ficha) {
+  return leerRecorrido(ficha).intentos;
 }
