@@ -1,65 +1,61 @@
 ---
 type: constitution
-title: rsc-harness-EAM — Constitution
-description: Draft written by rsc onboard from the accepted plan; not ratified.
+title: Constitución de la AI Factory
+description: Reglas aprobadas para seguir las tareas de los proyectos desde su entrada hasta su salida.
 tags: [sdd, constitution]
-timestamp: 2026-11-13T10:59:01Z
+timestamp: 2026-11-13T11:12:59Z
 topic: sdd
-status: draft
-version: draft
+version: 1.0.0
 ---
 
-# rsc-harness-EAM — Constitution
+# Constitución de la AI Factory · v1.0.0
 
-> **borrador — complétalo con la fase `constitution` antes del primer SDD.**
-> Draft: complete it with the `constitution` phase before the first SDD feature. It holds only what
-> onboarding knew; it ratifies no principle. Ratifying it removes `status: draft` and starts at v1.0.0.
+La AI Factory permite aprender a usar rsc-harness y adaptarlo a varios proyectos. Su panel web muestra cómo avanza cada tarea y permite elegir el agente y el modelo que ejecutarán cada paso.
 
-## Known facts (from onboarding)
+## 1. Entrada y salida de las tareas
 
-- Goal: Aprender a usar rsc-harness y adaptarlo a mis proyectos. Crear un dashboard web que muestre las tareas de los proyectos activos, su estado y el paso actual según rsc-harness, y permita configurar el a
-- Project kind: software · software scope: growing
-- How code changes land: branches closed with a pull request; the default branch is closed to direct work (`--workflow branches`).
-- Stack evidence: Detected at install: node (from package.json). Not ratified yet.
+Al entrar en la cola, cada tarea registra el proyecto, un identificador estable, el resultado que se pide y cómo se comprobará. La tarea sale como **entregada** cuando una prueba acredita ese resultado. Si se cancela, sale como **cancelada** y conserva el motivo.
 
-## 1. Stack canon
+## 2. Recorrido de cada proyecto
 
-Detected at install: node (from package.json). Not ratified yet.
+La vista general agrupa el flujo en **Entrada → Preparación → Ejecución → Verificación → Salida**. Cada grupo muestra el paso concreto de rsc-harness en ese proyecto. Una tarea sencilla puede ir de entrada a ejecución. Si falla una prueba, puede volver a ejecución y conservar el intento anterior.
 
-## 2. Quality bar
+## 3. Paso y estado
 
-_Pending — to be completed in the `constitution` phase._
+Cada tarea muestra por separado su paso y su estado. Por ejemplo, puede estar en el paso «Revisar los cambios» y en el estado «Esperando aprobación». Si se bloquea, sigue visible en su paso. El panel muestra el motivo y, cuando se conoce, quién o qué puede desbloquearla.
 
-## 3. Conventions
+## 4. Historial y fuentes
 
-_Pending — to be completed in the `constitution` phase._
+El historial registra la entrada de la tarea, el inicio y el fin de cada paso, quién lo ejecutó y qué resultado dejó. Cada avance enlaza con su fuente, por ejemplo una ficha, una prueba o una pull request. Si un proyecto deja de actualizarse, el panel conserva el último dato conocido y muestra su fecha.
 
-## 4. Branching & shipping
+## 5. Agente y modelo por paso
 
-Chosen at install: branches closed with a pull request; the default branch is closed to direct work. _Pending — to be completed in the `constitution` phase._
+Desde la web se puede elegir una combinación de agente y modelo por paso para toda la fábrica. Una elección propia de un proyecto tiene prioridad para ese proyecto y ese paso. Los cambios se aplican a los pasos que empiecen después. El historial distingue la elección prevista del agente y modelo que realmente intervinieron, cuando el proyecto los registra.
 
-## 5. Security & privacy floor
+## 6. Colas y tiempos de espera
 
-_Pending — to be completed in the `constitution` phase._
+La vista general muestra, por proyecto y por paso, cuántas tareas esperan, cuántas están en marcha y cuánto tiempo llevan ahí. Permite abrir la tarea más antigua de una cola y localizar las que requieren una decisión del usuario. Las entregas y las cancelaciones se cuentan por separado.
 
-## 6. UX / accessibility floor (if there is a UI)
+## 7. Control de los datos
 
-_Pending — to be completed in the `constitution` phase._
+El usuario elige qué proyectos incorpora. La primera versión funciona en su equipo, lee los registros necesarios para seguir las tareas y guarda la configuración elegida. Las claves y las conversaciones privadas quedan fuera de las vistas y del historial.
 
-## 7. Performance budgets (where they matter)
+## 8. Desarrollo y verificación de la fábrica
 
-_Pending — to be completed in the `constitution` phase._
+El dashboard tendrá su propia carpeta en el fork. Los cambios llegarán a main mediante ramas y pull requests con las comprobaciones en verde. Los pasos y estados tendrán etiquetas de texto y se podrán consultar con teclado. Se documentarán las decisiones que cambien el significado de un estado o la elección de un agente.
 
-## 8. Knowledge & decisions
+## Prueba de aceptación de la primera entrega
 
-_Pending — to be completed in the `constitution` phase._
+1. Registrar dos proyectos y seguir una tarea real del primero desde su entrada en la cola.
+2. Observar cómo pasa a ejecución y después a revisión. Registrar un fallo, su vuelta a ejecución y la nueva revisión. Marcar la entrega cuando exista la prueba de cierre.
+3. Reconstruir el recorrido desde la web. Comprobar cuándo ocurrió cada movimiento, cuánto tiempo estuvo esperando la tarea, qué agente y modelo intervinieron según los registros y qué prueba permitió cerrarla.
+4. Configurar una elección general para un paso y otra propia para uno de los proyectos. Comprobar en las siguientes ejecuciones de ese paso que cada proyecto usa la combinación que le corresponde.
 
-## Definition of Done (the merge bar `verify` runs against)
+La primera entrega prioriza este recorrido completo. Los límites de tiempo y volumen se fijarán después de medir el uso con tareas reales.
 
-_Pending — to be completed in the `constitution` phase._
-
-## Amendment log (append-only)
+## Historial de cambios
 
 | Date | Version | Change | Why |
 |------|---------|--------|-----|
 | 2026-11-13 | draft | Draft generated by `rsc onboard`. | The SDD floor needs a constitution; ratification is the `constitution` phase's. |
+| 2026-11-13 | 1.0.0 | Ratificación de las ocho reglas y la prueba de aceptación. | Seguir cada tarea de principio a fin en la AI Factory. |
