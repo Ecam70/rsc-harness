@@ -16,3 +16,11 @@ El archivo de configuración es una lista de objetos con `id` y `raiz` (carpeta 
 El campo `historial` del listado abre los intentos de una ficha. Para registrar una transición, añade al final de su sección «Transiciones» una línea JSON con el ID estable del movimiento, paso, número de intento, estado, fuente y fecha UTC cuando conste. El orden de las líneas es el orden registrado. Una fecha nula significa «Sin registrar». Las fichas anteriores sin movimientos devuelven una lista vacía.
 
     {"id":"revision-2-inicio","paso":"revisión","intento":2,"estado":"en curso","fecha":null,"fuente":"acta de revisión"}
+
+## Revisiones con selección de modelo (T004)
+
+Desde la raíz del fork, ejecutar una revisión con la lista local de proyectos y el nombre de la ficha:
+
+    python3 dashboard/revisar.py "$HOME/Library/Application Support/ai-factory-t002/proyectos.json" A T002 t002.md
+
+Las reglas están en dashboard/reglas-modelos.json. Se leen una vez al inicio de cada intento. La excepción del proyecto tiene prioridad para el paso revision. El recibo JSON se imprime en la salida estándar; el código 2 indica que el identificador del modelo recibido no se pudo confirmar o difiere del solicitado. Los recibos solo contienen datos seleccionados y huellas. El texto completo del diagnóstico del proceso no forma parte del recibo.
