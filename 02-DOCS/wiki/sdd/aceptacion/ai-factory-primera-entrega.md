@@ -19,9 +19,9 @@ Se introdujeron marcadores ficticios en el cuerpo de una ficha temporal y en cam
 
 ## Repetir el contraste con los registros
 
-Con A y B activos en el servicio local, ejecuta desde la raíz del fork:
+Tras separar los repositorios, abre una terminal en [ai-factory-dashboard](https://github.com/Ecam70/ai-factory-dashboard). Con A y B activos en el servicio local, ejecuta:
 
-    node dashboard/comprobar-aceptacion.mjs http://127.0.0.1:4319
-    node --test dashboard/*.test.mjs
+    node pruebas/comprobar-aceptacion.mjs http://127.0.0.1:4319 /ruta/al/fork-rsc-harness-EAM
+    npm test
 
 El primer comando contrasta las fichas publicadas por el servicio con los recibos guardados. Para repetir el recorrido en vivo, usa una tarea nueva en A, guarda las dos reglas desde la web y sigue los seis pasos de la especificación. Para revisar el texto de la guía, el ejecutor admite una consigna por entrada estándar mediante la opción --consigna-stdin.

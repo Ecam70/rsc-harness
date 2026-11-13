@@ -1,3 +1,4 @@
+import { forkCli } from './fork-source.js';
 import { createHash } from 'node:crypto';
 import { appendFileSync, copyFileSync, existsSync, lstatSync, mkdirSync, readFileSync, readdirSync, readlinkSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve, sep } from 'node:path';
@@ -93,7 +94,7 @@ function digestGovernedPaths(cwd, paths) {
 function recoveryCommand(plan, planId) {
   const record = plan.record;
   return [
-    'npx @ericrisco/rsc@latest onboard',
+    `${forkCli} onboard`,
     `--technical-level ${record.technicalLevel}`,
     `--project-kind ${record.projectKind}`,
     `--goal-base64 ${encodeGoal(record.goal)}`,
@@ -502,7 +503,7 @@ export function harnessReadiness(cwd = process.cwd(), plan = {}) {
 //
 // Un recibo de una versión que no declaraba suelo queda exento por construcción (P3), igual que en
 // el instalador: aquí no se inventa un suelo que el plan aceptado no traía.
-const ONBOARD_ACTION = 'Run `npx @ericrisco/rsc@latest onboard` to record a plan for this harness (optional: what is installed keeps working).';
+const ONBOARD_ACTION = 'Run `rsc onboard` to record a plan for this harness (optional: what is installed keeps working).';
 const draftAction = (path) => `Complete ${path} with the \`constitution\` phase (tell your agent "constitution") before the first SDD feature; ratifying removes \`status: draft\`.`;
 
 export function onboardingReadiness(cwd = process.cwd(), manifest = readManifest(cwd)) {
@@ -516,7 +517,7 @@ export function onboardingReadiness(cwd = process.cwd(), manifest = readManifest
   if (!identical) {
     return {
       status: 'incomplete', missing: ['<onboarding receipt does not match its accepted plan id>'], pending,
-      action: 'Do not trust the receipt. Re-run `npx @ericrisco/rsc@latest onboard` and accept a fresh plan.',
+      action: 'Do not trust the receipt. Re-run `rsc onboard` and accept a fresh plan.',
     };
   }
   const missing = harnessFloorGaps(cwd, receipt.plan);

@@ -17,6 +17,26 @@ Start with your goal. Review what rsc proposes to install. Accept the plan befor
 
 **MIT licensed · project-local setup · 19 assistant targets**
 
+## Incorporar un proyecto al dashboard de la AI Factory
+
+Desde la carpeta del proyecto, define `rsc_eam`. Esta función ejecuta la versión de tu fork identificada por el commit de GitHub. Requiere Git, Node.js y npm.
+
+```sh
+revision_eam=$(git ls-remote https://github.com/Ecam70/rsc-harness.git refs/heads/main | cut -f1)
+rsc_eam() {
+  npm exec --yes --package="https://codeload.github.com/Ecam70/rsc-harness/tar.gz/$revision_eam" -- rsc "$@"
+}
+```
+
+1. **Proyecto nuevo.** Ejecuta `rsc_eam onboard`. Responde a las preguntas y elige **Sí** en «¿Quieres ver este proyecto en tu dashboard local?». Acepta el plan mostrado para instalar el harness y registrar el proyecto. Si un asistente ejecuta el proceso, usa `--dashboard si` al generar el plan y al aceptarlo con su identificador.
+2. **Proyecto existente.** Ejecuta `rsc_eam dashboard alta` desde su carpeta. Funciona con el tablero cerrado, incluso si el proyecto carece de harness. Para elegir el identificador, usa por ejemplo `rsc_eam dashboard alta C`. Si la carpeta ya tiene uno, el comando lo muestra.
+3. **Primera ficha.** Ejecuta `rsc_eam tarea crear C-001 "Preparar la primera entrega"`. Abre el tablero local en [el puerto 4319](http://127.0.0.1:4319/), selecciona el proyecto y pulsa la tarjeta. Un proyecto registrado sin fichas muestra «Sin tareas».
+4. **Registrar un intento.** Ejecuta `rsc_eam tarea intento C-001 revision-1 revision 1 "en curso" 02-DOCS/wiki/ftd/c-001.md`. Los argumentos identifican la tarea, el movimiento, el paso, el número de intento, el estado y su fuente. Para registrar el resultado, usa otro ID de movimiento y la referencia al recibo. Repetir un movimiento idéntico conserva la fecha inicial.
+
+El alta utiliza el mismo registro local que el tablero. Para trabajar con una copia, asigna a `RSC_DASHBOARD_CONFIG` la ruta de su archivo `proyectos.json` tanto en el instalador como en el tablero. Las fichas y sus intentos se guardan en la carpeta del proyecto. [Formato compartido](docs/formato-ai-factory-v1.md).
+
+## Upstream quick start
+
 Give this URL to your agent and paste the request in the chat:
 
 ```text

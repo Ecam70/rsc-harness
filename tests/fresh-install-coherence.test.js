@@ -11,7 +11,7 @@ import { spawnSync } from 'node:child_process';
 
 const ROOT = new URL('..', import.meta.url).pathname;
 const CLI = join(ROOT, 'scripts/rsc.js');
-const VERSION = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8')).version;
+import { forkCli } from '../scripts/lib/fork-source.js';
 const git = (cwd, args) => spawnSync('git', args, { cwd, encoding: 'utf8' });
 const run = (cwd, args, opts = {}) => spawnSync(process.execPath, [CLI, ...args], { cwd, encoding: 'utf8', ...opts });
 const ONBOARD = ['onboard', '--technical-level', 'technical', '--project-kind', 'software', '--goal', 'mini web de tareas',
@@ -50,7 +50,7 @@ function sessionStart(sessionId) {
 
 test('9c · the accept command pins the exact version that produced the plan', () => {
   const line = preview.split('\n').find((l) => l.startsWith('Accept exactly this plan:'));
-  assert.ok(line.includes(`npx @ericrisco/rsc@${VERSION} onboard`), line);
+  assert.ok(line.includes(`${forkCli} onboard`), line);
   assert.ok(!line.includes('@latest'), line);
 });
 

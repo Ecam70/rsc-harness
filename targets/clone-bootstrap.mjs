@@ -31,6 +31,15 @@ import { createHash } from 'node:crypto';
 import { pathToFileURL, fileURLToPath } from 'node:url';
 
 const PACKAGE = '@ericrisco/rsc';
+// This file is copied alone to a clone, before installed modules exist.
+function syncCommand(manifest) {
+  const revision = manifest.forkSource?.revision;
+  if (manifest.forkSource?.repository === 'Ecam70/rsc-harness' && /^[a-f0-9]{40}$/.test(revision)) {
+    return `npm exec --yes --package=https://codeload.github.com/Ecam70/rsc-harness/tar.gz/${revision} -- rsc sync`;
+  }
+  const version = safeVersion(manifest.catalogVersion);
+  return version ? `npx ${PACKAGE}@${version} sync` : `npx ${PACKAGE} sync`;
+}
 const SEMVER = /^\d+\.\d+\.\d+(?:-[0-9a-z.-]+)?$/i;
 
 /**
@@ -107,6 +116,7 @@ export function readManifest(root) {
     // Same reasoning, and it matters more here: this string is pasted into the command we tell a
     // person to run *exactly*. A version, or nothing — "no version pinned" is a true and harmless
     // thing to say, and it is what an unusable value becomes.
+    ...(parsed.forkSource ? { forkSource: parsed.forkSource } : {}),
     catalogVersion: SEMVER.test(String(parsed.catalogVersion ?? '')) ? parsed.catalogVersion : null,
     targets: Array.isArray(parsed.targets) ? parsed.targets : [],
     // Same allowlist, same reason, and it bites harder here: these names are pasted into the
@@ -179,7 +189,7 @@ function localTier(root) {
  */
 export function composeDivergence(manifest, evaluation) {
   const version = safeVersion(manifest.catalogVersion);
-  const command = version ? `npx ${PACKAGE}@${version} sync` : `npx ${PACKAGE} sync`;
+  const command = syncCommand(manifest);
   let text =
     '===== rsc =====\n' +
     'This project declares a harness that no longer matches what is built here — someone changed\n' +
@@ -238,7 +248,7 @@ export function composeOffer(manifest) {
   // to honour it. Pinned, the command is reproducible three months from now (spec AC#6).
   const version = safeVersion(manifest.catalogVersion);
   const pin = version ? `${PACKAGE}@${version}` : `${PACKAGE} (no version pinned)`;
-  const command = version ? `npx ${PACKAGE}@${version} sync` : `npx ${PACKAGE} sync`;
+  const command = syncCommand(manifest);
   const count = manifest.skills.length;
   const own = manifest.own.length ? `, plus ${manifest.own.length} written by the team (never overwritten)` : '';
   return {
@@ -378,7 +388,7 @@ function remindOnProtectedAction(root) {
       additionalContext:
         `rsc: you are about to ${hit.what}, and this project's checks for that are not built on ` +
         'this machine. Nothing is blocked, and this is the last time it will be mentioned. ' +
-        `To build them: npx ${PACKAGE}${pin} sync`,
+        `To build them: ${syncCommand(manifest)}`,
     },
   }));
 }

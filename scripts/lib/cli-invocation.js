@@ -1,3 +1,4 @@
+import { forkCli } from './fork-source.js';
 import { accessSync, constants, statSync, readFileSync, writeFileSync, readdirSync } from 'node:fs';
 import { join, isAbsolute } from 'node:path';
 
@@ -24,8 +25,10 @@ export function installedCli({ env = process.env, platform = process.platform } 
 }
 
 export function cliInstructions(text, local = installedCli()) {
-  // Explicit versions (including @latest) are deliberate choices, never rewritten.
-  return local ? text.replace(/\bnpx[ \t]+(?:-y[ \t]+)?@ericrisco\/rsc(?=[ \t`\n]|$)/g, 'rsc') : text;
+  // A version in the public npm registry is not a revision of this fork. Use the
+  // installer's own archive for pinned commands and for the fallback when no CLI exists.
+  return text.replace(/\bnpx[ \t]+(?:-y[ \t]+)?@ericrisco\/rsc(@(?:<catalogVersion in \.rsc\.json>|latest|\d+\.\d+\.\d+))?(?=[ \t`\n]|$)/g,
+    (_command, pin) => local && !pin ? 'rsc' : forkCli);
 }
 
 export function materializeCliInstructions(dir, local) {
@@ -34,10 +37,7 @@ export function materializeCliInstructions(dir, local) {
     if (entry.isDirectory()) materializeCliInstructions(file, local);
     else if (entry.isFile() && entry.name.endsWith('.md')) {
       const before = readFileSync(file, 'utf8');
-      let after = cliInstructions(before, local);
-      if (local && entry.name === 'SKILL.md' && /\nname: suggest\n/.test(before)) {
-        after += '\n**Installed CLI.** Use `rsc` for unversioned `npx @ericrisco/rsc` commands, including commands suggested by hooks. Explicit package versions stay pinned. If `rsc` disappears from PATH, run sync with the declared package version to refresh these instructions. This does not grant execution permissions.\n';
-      }
+      const after = cliInstructions(before, local);
       if (after !== before) writeFileSync(file, after);
     }
   }

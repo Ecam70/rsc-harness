@@ -141,7 +141,7 @@ test('an application failure is typed and carries executable recovery', async ()
   const record = normalizeOnboarding({ technicalLevel: 'mixed', accompaniment: 'L1', projectKind: 'operations', goal: 'Ops', targets: ['codex'] });
   const plan = buildOnboardingPlan(record, scanProject(cwd));
   await assert.rejects(applyAcceptedOnboarding({ cwd, plan, planId: identifyPlan(plan), apply: async () => { throw new Error('disk full'); } }), (error) => {
-    assert.match(error.message, /RSC_ONBOARDING_INCOMPLETE.*npx .*onboard/s);
+    assert.match(error.message, /RSC_ONBOARDING_INCOMPLETE.*npm exec --yes --package=https:\/\/codeload\.github\.com\/Ecam70\/rsc-harness\/tar\.gz\/[0-9a-f]{40} -- rsc onboard/s);
     for (const flag of ['--technical-level', '--project-kind', '--goal-base64', '--target', '--accept-plan']) assert.match(error.message, new RegExp(flag));
     // The accompaniment dial is retired: a recovery hint must not hand it back.
     assert.doesNotMatch(error.message, /--accompaniment/);

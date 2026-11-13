@@ -14,8 +14,29 @@ import { spawn } from 'node:child_process';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-// Update check: compare the installed version (.rsc/.version, written at install)
-// against the latest published on npm, and nudge the agent to offer an update.
+export const FORK_REPO = 'Ecam70/rsc-harness';
+export const validRevision = (revision) => typeof revision === 'string' && /^[a-f0-9]{40}$/.test(revision);
+export function forkArchive(revision) {
+  if (revision !== 'main' && !validRevision(revision)) throw new Error('Invalid EAM revision');
+  return `https://codeload.github.com/${FORK_REPO}/tar.gz/${revision}`;
+}
+
+async function forkJson(url) {
+  const response = await fetch(url, { signal: AbortSignal.timeout(3000) });
+  if (!response.ok) throw new Error(`GitHub ${response.status}`);
+  return response.json();
+}
+
+export async function latestFork() {
+  const { sha } = await forkJson(`https://api.github.com/repos/${FORK_REPO}/commits/main`);
+  if (!validRevision(sha)) throw new Error('Invalid EAM revision');
+  const pkg = await forkJson(`https://raw.githubusercontent.com/${FORK_REPO}/${sha}/package.json`);
+  if (!SEMVER_ONLY.test(pkg.version)) throw new Error('Invalid EAM version');
+  return { version: pkg.version, rscFixes: pkg.rscFixes, revision: sha };
+}
+
+// The version still controls major-version consent. The commit also detects fork changes
+// between two upstream version bumps.
 // Fail-silent (offline / missing baseline / parse error → nothing). Disable with
 // RSC_NO_UPDATE_CHECK=1. RSC_LATEST overrides the npm lookup (tests / mirrors).
 function isNewer(a, b) {
@@ -78,11 +99,11 @@ function declaredTargets(root) {
     return Array.isArray(list) ? list.filter((t) => typeof t === 'string' && /^[a-z0-9-]+$/.test(t)) : [];
   } catch { return []; }
 }
-function launchUpdate(root, version, env) {
+function launchUpdate(root, version, revision, env) {
   // RSC_AUTO_UPDATE_CMD (a JSON argv) replaces npx in tests; the arguments after it are the real ones.
   const base = env.RSC_AUTO_UPDATE_CMD
     ? JSON.parse(env.RSC_AUTO_UPDATE_CMD)
-    : ['npx', '-y', `@ericrisco/rsc@${version}`];
+    : ['npx', '-y', `--package=${forkArchive(revision)}`, '--', 'rsc'];
   const targets = declaredTargets(root);
   const args = [...base.slice(1), 'sync', ...(targets.length ? ['--target', targets.join(',')] : [])];
   const log = openSync(logFile(root), 'w');
@@ -114,7 +135,11 @@ export async function updateNotice(root, env = process.env) {
     const installed = readFileSync(join(root, '.rsc', '.version'), 'utf8').trim();
     // A background update that finished since the last session: say so once, then keep quiet.
     const prior = readAutoState(root);
-    if (prior && !prior.reported && SEMVER_ONLY.test(String(prior.to)) && !isNewer(prior.to, installed)) {
+    let installedRevision;
+    try {
+      installedRevision = JSON.parse(readFileSync(join(root, '.rsc.json'), 'utf8')).forkSource?.revision;
+    } catch { /* Legacy project. */ }
+    if (prior && !prior.reported && SEMVER_ONLY.test(String(prior.to)) && !isNewer(prior.to, installed) && (!prior.revision || prior.revision === installedRevision)) {
       say(`
 ===== rsc updated =====
 rsc updated itself in the background, from ${prior.from} to ${installed}. It is active in this session.
@@ -126,22 +151,23 @@ ACTION: tell the user in one line. Files of the harness may show as changed in g
     let doc = null;
     if (env.RSC_LATEST_JSON) doc = JSON.parse(env.RSC_LATEST_JSON);
     else if (env.RSC_LATEST) doc = { version: env.RSC_LATEST };
-    else {
-      const ctrl = new AbortController();
-      const timer = setTimeout(() => ctrl.abort(), 1500);
-      const res = await fetch('https://registry.npmjs.org/@ericrisco%2frsc/latest', { signal: ctrl.signal });
-      clearTimeout(timer);
-      doc = await res.json();
-    }
+    else doc = await latestFork();
     const latest = doc?.version;
-    if (installed && SEMVER_ONLY.test(String(latest)) && isNewer(latest, installed)) {
+    const revision = doc?.revision;
+    const changedRevision = validRevision(revision) && installedRevision !== revision;
+    if (installed && SEMVER_ONLY.test(String(latest)) && (isNewer(latest, installed) || (latest === installed && changedRevision))) {
+      // A locally tested branch can be ahead of main. Never replace it with an older or divergent commit.
+      if (validRevision(revision) && validRevision(installedRevision) && revision !== installedRevision) {
+        const comparison = await forkJson(`https://api.github.com/repos/${FORK_REPO}/compare/${installedRevision}...${revision}`);
+        if (comparison.status !== 'ahead') return out;
+      }
       const newMajor = majorOf(latest) !== majorOf(installed);
       const auto = !existsSync(join(root, '.rsc', '.no-auto-update')) && !newMajor;
       const now = Date.now();
-      const since = prior && prior.to === latest ? now - new Date(prior.startedAt).getTime() : Infinity;
+      const since = prior && prior.to === latest && prior.revision === revision ? now - new Date(prior.startedAt).getTime() : Infinity;
       if (auto && since >= AUTO_RETRY_MS) {
-        launchUpdate(root, latest, env);
-        writeAutoState(root, { from: installed, to: latest, startedAt: new Date(now).toISOString() });
+        launchUpdate(root, latest, revision, env);
+        writeAutoState(root, { from: installed, to: latest, revision, startedAt: new Date(now).toISOString() });
         say(`
 ===== rsc updating =====
 rsc ${latest} is out — you have ${installed}. It is installing itself in the background now and
@@ -169,7 +195,7 @@ rsc ${latest} is out — you have ${installed}. It fixes problems this install s
 ${fixes.map((f) => `  - ${f.symptom} (fixed in ${f.fixedIn})`).join('\n')}
 ${why}ACTION: before starting the task, tell the user in one line that the update fixes what they
 may be seeing, and if they say yes, run it in this project:
-  npx @ericrisco/rsc@latest
+  npm exec --yes --package=${forkArchive(revision || 'main')} -- rsc sync
 ================================
 `);
         } else {
@@ -177,7 +203,7 @@ may be seeing, and if they say yes, run it in this project:
 ===== rsc update available =====
 rsc ${latest} is out — you have ${installed}.
 ${why}ACTION: tell the user a new version is available and, if they say yes, run:
-  npx @ericrisco/rsc@latest
+  npm exec --yes --package=${forkArchive(revision || 'main')} -- rsc sync
 (That reinstalls and refreshes the skill content to the latest.)
 ================================
 `);
@@ -212,6 +238,6 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
       if (said) notice = notice ? `${notice}\n\n${said}` : said;
     } catch { /* no offer */ }
   }
-  if (!hook && !notice) notice = 'rsc is up to date.';
+  if (!hook && !notice) notice = 'No pending EAM update (up to date or offline).';
   process.stdout.write(`${hookOutput(target, notice)}\n`);
 }
