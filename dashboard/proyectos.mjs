@@ -1,6 +1,7 @@
 // Punto de entrada local de T002. La configuración y las lecturas son privadas del equipo.
 import { mkdir, readFile, readdir, realpath, rename, writeFile } from 'node:fs/promises';
 import { basename, join, resolve } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { randomUUID } from 'node:crypto';
 import { parseFrontmatter } from '../scripts/lib/frontmatter.js';
 
@@ -16,7 +17,9 @@ async function leerFichas(raiz) {
     const id = campos.id || basename(archivo.name, '.md');
     if (ids.has(id)) throw new Error('Identificador de tarea repetido');
     ids.add(id);
-    tareas.push({ id, titulo: texto.match(/^# (.+)$/m)?.[1] || id,
+    const seccion = texto.split(/^## (?:Evidencia|Evidence)[ \t]*(?:\n|$)/im)[1];
+    const evidencia = seccion?.split(/^#{1,2} /m)[0].trim() || null;
+    tareas.push({ evidencia, id, titulo: texto.match(/^# (.+)$/m)?.[1] || id,
       estado: campos.status || 'Sin registrar', fuente: '02-DOCS/wiki/ftd/' + archivo.name });
   }
   return tareas;
@@ -40,12 +43,18 @@ async function refrescar(id, raiz, almacen) {
   return { proyecto: id, disponible: true, ...lectura };
 }
 
-const [config, almacen] = process.argv.slice(2);
-if (!config || !almacen) throw new Error('Uso: node dashboard/proyectos.mjs proyectos.json carpeta-de-lecturas');
-const proyectos = JSON.parse(await readFile(config, 'utf8'));
-if (!Array.isArray(proyectos) || proyectos.some(p => !/^[a-zA-Z0-9_-]+$/.test(p?.id ?? '') || typeof p.raiz !== 'string' || !p.raiz)
-    || new Set(proyectos.map(p => p.id)).size !== proyectos.length) throw new Error('Lista de proyectos no válida');
-await mkdir(almacen, { recursive: true, mode: 0o700 });
-const resultado = [];
-for (const p of proyectos) resultado.push(await refrescar(p.id, resolve(p.raiz), almacen));
-console.log(JSON.stringify(resultado, null, 2));
+export async function leerProyectos(config, almacen) {
+  const proyectos = JSON.parse(await readFile(config, 'utf8'));
+  if (!Array.isArray(proyectos) || proyectos.some(p => !/^[a-zA-Z0-9_-]+$/.test(p?.id ?? '') || typeof p.raiz !== 'string' || !p.raiz)
+      || new Set(proyectos.map(p => p.id)).size !== proyectos.length) throw new Error('Lista de proyectos no válida');
+  await mkdir(almacen, { recursive: true, mode: 0o700 });
+  const resultado = [];
+  for (const p of proyectos) resultado.push(await refrescar(p.id, resolve(p.raiz), almacen));
+  return resultado;
+}
+
+if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
+  const [config, almacen] = process.argv.slice(2);
+  if (!config || !almacen) throw new Error('Uso: node dashboard/proyectos.mjs proyectos.json carpeta-de-lecturas');
+  console.log(JSON.stringify(await leerProyectos(config, almacen), null, 2));
+}
