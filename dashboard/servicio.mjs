@@ -13,18 +13,19 @@ const servicio = createServer(async (req, res) => {
   if (req.headers.host !== '127.0.0.1:' + servicio.address().port) return responder(403, 'Dirección no admitida');
   if (req.method !== 'GET') return responder(405, 'Solo lectura');
   const ruta = req.url.split('?')[0];
-  const detalle = ruta.match(/^\/proyectos\/([^/]+)\/tareas\/([^/]+)\/evidencia$/);
+  const detalle = ruta.match(/^\/proyectos\/([^/]+)\/tareas\/([^/]+)\/(evidencia|historial)$/);
   if (!detalle && ruta !== '/proyectos') return responder(404, 'Ruta desconocida');
   try {
     const proyectos = await leerProyectos(config, almacen);
-    if (!detalle) return responder(200, proyectos.map(p => ({ ...p, tareas: p.tareas.map(({ evidencia, ...t }) => ({
-      ...t, consulta: '/proyectos/' + encodeURIComponent(p.proyecto) + '/tareas/' + encodeURIComponent(t.id) + '/evidencia'
+    if (!detalle) return responder(200, proyectos.map(p => ({ ...p, tareas: p.tareas.map(({ evidencia, historial, ...t }) => ({
+      ...t, consulta: '/proyectos/' + encodeURIComponent(p.proyecto) + '/tareas/' + encodeURIComponent(t.id) + '/evidencia',
+      historial: '/proyectos/' + encodeURIComponent(p.proyecto) + '/tareas/' + encodeURIComponent(t.id) + '/historial'
     })) })));
     const proyecto = proyectos.find(p => p.proyecto === decodeURIComponent(detalle[1]));
     const tarea = proyecto?.tareas.find(t => t.id === decodeURIComponent(detalle[2]));
     if (!tarea) return responder(404, 'Ficha desconocida');
     responder(200, { proyecto: proyecto.proyecto, disponible: proyecto.disponible, fecha: proyecto.fecha,
-      tarea: tarea.id, fuente: tarea.fuente, evidencia: tarea.evidencia ?? null });
+      tarea: tarea.id, fuente: tarea.fuente, ...(detalle[3] === 'historial' ? { intentos: tarea.historial ?? [] } : { evidencia: tarea.evidencia ?? null }) });
   } catch (error) {
     responder(error instanceof URIError ? 400 : 500, 'No se pudo consultar la lectura');
   }
