@@ -5,6 +5,8 @@ import { pathToFileURL } from 'node:url';
 import { randomUUID } from 'node:crypto';
 import { parseFrontmatter } from '../scripts/lib/frontmatter.js';
 
+import { reconstruirIntentos } from './historial.mjs';
+
 async function leerFichas(raiz) {
   const carpeta = join(await realpath(raiz), '02-DOCS/wiki/ftd');
   if (await realpath(carpeta) !== carpeta) throw new Error('La carpeta de fichas es un enlace');
@@ -19,7 +21,7 @@ async function leerFichas(raiz) {
     ids.add(id);
     const seccion = texto.split(/^## (?:Evidencia|Evidence)[ \t]*(?:\n|$)/im)[1];
     const evidencia = seccion?.split(/^#{1,2} /m)[0].trim() || null;
-    tareas.push({ evidencia, id, titulo: texto.match(/^# (.+)$/m)?.[1] || id,
+    tareas.push({ historial: reconstruirIntentos(texto), evidencia, id, titulo: texto.match(/^# (.+)$/m)?.[1] || id,
       estado: campos.status || 'Sin registrar', fuente: '02-DOCS/wiki/ftd/' + archivo.name });
   }
   return tareas;
