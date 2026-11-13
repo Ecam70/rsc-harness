@@ -1,0 +1,29 @@
+name: Sync upstream daily
+
+on:
+  schedule:
+    - cron: '23 5 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sync-upstream-main
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    if: github.repository == 'Ecam70/rsc-harness'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Merge upstream main without overwriting fork changes
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          gh api --method POST "repos/$GH_REPO/merge-upstream" -f branch=main
+          gh api "repos/$GH_REPO/compare/ericrisco:main...main" \
+            --jq 'if .behind_by == 0 then "Fork is up to date with upstream main" else error("Fork is still behind upstream main") end'
