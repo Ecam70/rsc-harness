@@ -1,5 +1,5 @@
 const columnas = ['Entrada', 'Preparación', 'Ejecución', 'Verificación', 'Salida'];
-const esc = valor => String(valor ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
+export const esc = valor => String(valor ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
 const normal = s => String(s).normalize('NFD').replace(/\p{M}/gu,'').toLowerCase();
 const fecha = s => s ? new Date(s).toISOString().replace('T',' ').slice(0,19) + ' UTC' : 'Sin registrar';
 const url = (p,t) => '/?' + new URLSearchParams({ proyecto:p, tarea:t });
@@ -31,8 +31,8 @@ function duracion(s) {
   return minutos < 60 ? minutos+' min' : Math.floor(minutos/60)+' h '+minutos%60+' min';
 }
 
-function pagina(titulo,contenido) {
-  return '<!doctype html><html lang="es"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>'+esc(titulo)+' · AI Factory</title><link rel="stylesheet" href="/tablero.css"><script defer src="/actualizar.js"></script><header><a href="/">AI Factory</a><span>Panel local</span></header><main>'+contenido+'</main></html>';
+export function pagina(titulo,contenido) {
+  return '<!doctype html><html lang="es"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>'+esc(titulo)+' · AI Factory</title><link rel="stylesheet" href="/tablero.css"><script defer src="/actualizar.js"></script><header><a href="/">AI Factory</a><a class="ajustes" href="/configuracion">Agentes y modelos</a></header><main>'+contenido+'</main></html>';
 }
 
 export function tablero(proyectos, params) {

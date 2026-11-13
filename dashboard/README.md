@@ -23,7 +23,7 @@ Desde la raíz del fork, ejecutar una revisión con la lista local de proyectos 
 
     python3 dashboard/revisar.py "$HOME/Library/Application Support/ai-factory-t002/proyectos.json" A T002 t002.md
 
-Las reglas están en dashboard/reglas-modelos.json. Se leen una vez al inicio de cada intento. La excepción del proyecto tiene prioridad para el paso revision. El recibo JSON se imprime en la salida estándar; el código 2 indica que el identificador del modelo recibido no se pudo confirmar o difiere del solicitado. Los recibos solo contienen datos seleccionados y huellas. El texto completo del diagnóstico del proceso no forma parte del recibo.
+El ejecutor lee reglas-modelos.json junto a proyectos.json. En la primera ejecución usa la plantilla dashboard/reglas-modelos.json si aún no hay reglas locales. Se leen una vez al inicio de cada intento. La excepción del proyecto tiene prioridad para el paso revision. El recibo JSON se imprime en la salida estándar; el código 2 indica que el identificador del modelo recibido no se pudo confirmar o difiere del solicitado. Los recibos solo contienen datos seleccionados y huellas. El texto completo del diagnóstico del proceso no forma parte del recibo.
 
 ## Tablero y detalle (T005)
 
@@ -32,3 +32,9 @@ Abre la raíz del servicio en el navegador. El filtro de proyecto conserva la id
 La ficha cerrada con evidencia se muestra en Salida; una revisión superada por sí sola sigue en Verificación. Los movimientos se interpretan en el orden registrado. Un paso desconocido con nombre propio aparece en «Sin clasificar». Las fichas en curso sin movimientos aparecen en Ejecución con el paso sin registrar. La hora de lectura del proyecto nunca se usa para calcular cuánto lleva una tarea en un paso. Para cancelaciones y bloqueos se pueden declarar motivo y responsable en la cabecera de la ficha.
 
 En el detalle se muestran la fuente, los intentos, las fechas y los registros de evidencia. Los recibos JSON referenciados bajo pruebas/ del proyecto o evidencias/ de la carpeta de fichas se presentan con una selección de sus campos.
+
+## Agentes y modelos (T006)
+
+Abre «Agentes y modelos» desde el tablero. Elige el ámbito y el identificador del paso y pulsa «Ver elección». Guarda la regla general o una excepción. Para eliminar una excepción, selecciona su proyecto y paso y pulsa «Volver a la regla general». El origen y la combinación efectivos aparecen encima del formulario.
+
+Las elecciones se guardan en el equipo junto a proyectos.json. Tanto la web como el ejecutor de revisión usan ese archivo en el siguiente intento. Puedes guardar elecciones para Codex, Claude Code, Cursor y Gemini; el adaptador que ejecuta revisiones actualmente es Codex.

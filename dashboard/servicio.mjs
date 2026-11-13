@@ -1,4 +1,6 @@
 import { readFile } from 'node:fs/promises';
+import { resolve, dirname, join } from 'node:path';
+import { mostrar, guardar } from './configuracion.mjs';
 import { tablero } from './tablero.mjs';
 import { createServer } from 'node:http';
 import { leerProyectos } from './proyectos.mjs';
@@ -13,11 +15,32 @@ const servicio = createServer(async (req, res) => {
     res.end(JSON.stringify(dato));
   }
   if (req.headers.host !== '127.0.0.1:' + servicio.address().port) return responder(403, 'Dirección no admitida');
-  if (req.method !== 'GET') return responder(405, 'Solo lectura');
+
   const ruta = req.url.split('?')[0];
   const detalle = ruta.match(/^\/proyectos\/([^/]+)\/tareas\/([^/]+)\/(evidencia|historial)$/);
-  if (!detalle && !['/', '/tablero.css', '/actualizar.js', '/proyectos'].includes(ruta)) return responder(404, 'Ruta desconocida');
+  if (!detalle && !['/', '/tablero.css', '/actualizar.js', '/configuracion', '/proyectos'].includes(ruta)) return responder(404, 'Ruta desconocida');
   try {
+    if (ruta === '/configuracion') {
+      const archivo = join(dirname(resolve(config)), 'reglas-modelos.json');
+      const ids = JSON.parse(await readFile(config,'utf8')).map(p => p.id);
+      if (req.method === 'POST') {
+        if (req.headers.origin !== 'http://'+req.headers.host) return responder(403,'Origen no admitido');
+        if (req.headers['content-type']?.split(';')[0] !== 'application/x-www-form-urlencoded') return responder(415,'Formulario no válido');
+        const partes=[]; let longitud=0;
+        for await (const parte of req) {
+          longitud+=parte.length;
+          if (longitud>4096) return responder(413,'Formulario demasiado grande');
+          partes.push(parte);
+        }
+        const location=guardar(archivo,ids,new URLSearchParams(Buffer.concat(partes).toString()));
+        res.writeHead(303,{Location:location}); return res.end();
+      }
+      if (req.method !== 'GET') return responder(405,'Método no admitido');
+      const html=mostrar(archivo,ids,new URL(req.url,'http://127.0.0.1').searchParams);
+      res.writeHead(200,{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store','Content-Security-Policy':"default-src 'none'; style-src 'self'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'"});
+      return res.end(html);
+    }
+    if (req.method !== 'GET') return responder(405,'Solo lectura');
     if (ruta === '/tablero.css' || ruta === '/actualizar.js') {
       const css = await readFile(new URL('.' + ruta, import.meta.url));
       res.writeHead(200, { 'Content-Type':ruta.endsWith('.css') ? 'text/css; charset=utf-8' : 'text/javascript; charset=utf-8' });
@@ -40,6 +63,7 @@ const servicio = createServer(async (req, res) => {
     responder(200, { proyecto: proyecto.proyecto, disponible: proyecto.disponible, fecha: proyecto.fecha,
       tarea: tarea.id, fuente: tarea.fuente, ...(detalle[3] === 'historial' ? { intentos: tarea.historial ?? [] } : { evidencia: tarea.evidencia ?? null }) });
   } catch (error) {
+    if (error.status===400) return responder(400,error.message);
     responder(error instanceof URIError ? 400 : 500, 'No se pudo consultar la lectura');
   }
 });

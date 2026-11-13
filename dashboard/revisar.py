@@ -42,7 +42,10 @@ def ejecutar(args):
     raices = [Path(p["raiz"]).resolve(strict=True) for p in config if p["id"] == proyecto]
     if len(raices) != 1:
         raise ValueError("Proyecto no registrado o ambiguo")
-    reglas = json.loads(args.reglas.read_text())
+    archivo = args.reglas or args.proyectos.resolve().with_name("reglas-modelos.json")
+    if args.reglas is None and not archivo.exists():
+        archivo = Path(__file__).with_name("reglas-modelos.json")
+    reglas = json.loads(archivo.read_text())
     especial = reglas["proyectos"].get(proyecto, {})
     origen = "proyecto" if "revision" in especial else "general"
     eleccion = (especial if origen == "proyecto" else reglas["general"])["revision"]
@@ -90,5 +93,5 @@ if __name__ == "__main__":
     parser.add_argument("proyecto")
     parser.add_argument("tarea")
     parser.add_argument("ficha")
-    parser.add_argument("--reglas", type=Path, default=Path(__file__).with_name("reglas-modelos.json"))
+    parser.add_argument("--reglas", type=Path)
     raise SystemExit(0 if ejecutar(parser.parse_args()) else 2)
