@@ -1,0 +1,18 @@
+{
+  "proyecto": "A",
+  "tarea": "T002",
+  "paso": "revision",
+  "intento": "6df8c8d2-bf16-4588-aadf-fb0d2fbbb300",
+  "inicio": "2026-11-13T12:36:19.526038+00:00",
+  "fin": "2026-11-13T12:36:27.771585+00:00",
+  "origen": "general",
+  "agente": "codex",
+  "solicitado": "gpt-6.1-sol",
+  "confirmado": "gpt-6.1-sol",
+  "sesion_sha256": "19a8601abc4fdd54b4eecf45aa3eb1d359fe6c69dc7d380e4af4ab206aba51b4",
+  "ficha_sha256": "0c65cdb8a8b9223168c06f11b884f2a02d16ba377f62c50ef7cc2e2660399661",
+  "resultado_sha256": "d50a0e826245f2a6d86ddd71cf66170b9fabb5be2a90909689f23e7da9ce2615",
+  "respuestas": {
+    "52edf09514ff1d46bac80976244dc1010f6ca7a6197e457e5ff81d3e2836deb8": "gpt-6.1-sol"
+  }
+}
