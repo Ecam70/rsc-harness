@@ -5,10 +5,10 @@ description: Recorrido local, conexión con el ejecutor y verificación con dos 
 tags: [sdd, plan]
 topic: sdd
 slug: ai-factory-primera-entrega
-status: draft
+status: approved
 ---
 
-# Plan de implementación · pendiente de revisión
+# Plan de implementación · aprobado el 13 de noviembre de 2026
 
 [Especificación aprobada](../specs/ai-factory-primera-entrega.md) · [Constitución v1.0.0](../constitution.md)
 
@@ -35,3 +35,19 @@ Al comenzar un paso, el ejecutor consultará la excepción del proyecto y, en su
 ## Evidencia de entrega
 
 Entregar las referencias de la tarea de A, la revisión fallida y su repetición, los registros de ejecución de ambos proyectos y la prueba final. Contrastar la duración de la espera con las horas registradas. Anotar los tiempos observados antes de proponer límites de rendimiento. Los cambios de implementación se revisarán en ramas y pull requests con las comprobaciones en verde.
+
+## T001 · Recorrido de referencia (en curso)
+
+**Proyecto A propuesto:** este fork. La tarea real elegida para la demostración es T002, «Registrar proyectos y leer sus fichas y referencias desde el servicio local». Se dará por entregada al poder abrir dos tareas con el mismo nombre en proyectos diferentes y conservar la última lectura fechada si se pierde acceso a uno. Deberán quedar vinculados el resultado de la prueba y el cambio revisado. Registrar su entrada y los intentos desde el comienzo de T002.
+
+**Proyecto B:** pendiente de elección del usuario. Puede ser otro proyecto local con rsc o un proyecto de demostración independiente con registros propios. La separación debe permitir ejecutar una revisión con una elección propia de B.
+
+| Fuente contrastada | Dato disponible | Dato que queda por registrar |
+|---|---|---|
+| [PR #3](https://github.com/Ecam70/rsc-harness/pull/3) | Apertura a las 11:25:20 UTC del 13 de noviembre de 2026, dos comprobaciones satisfactorias e integración a las 11:28:03 UTC. | La apertura de la PR no fecha la entrada en cola. Las comprobaciones de GitHub tampoco identifican el modelo que revisó el cambio. |
+| [Formato de la ficha FTD](../../../../skills/ftd/SKILL.md) y [especificación aprobada](../specs/ai-factory-primera-entrega.md) | Rama, objetivo, estado de la ficha, lista de trabajo, siguiente paso y referencias a evidencias. El plan aporta el identificador T002. | Inicio y fin de espera, paso e intento, bloqueo y resultado de cada revisión. Identificar la tarea por proyecto e ID. |
+| [Protocolo de selección de modelos](../../../../skills/asdd/references/model-routing.md) y ayuda local de Codex | El protocolo admite selección orientativa; el ejecutor Codex instalado admite elegir modelo y emitir eventos. | Distinguir modelo pedido y confirmado para cada intento. La selección y el texto generado por el agente no prueban qué modelo atendió la ejecución. |
+
+**Dos combinaciones candidatas para revisión:** Codex con gpt-6.1-sol (general) y Codex con gpt-6-astra (excepción de B). Ambos nombres figuran en el catálogo local. Para comprobarlas en T004 se asociará cada revisión a su proyecto, tarea e intento; se contrastará la asignación con el identificador del modelo devuelto por el ejecutor o proveedor para esa ejecución. Si la salida disponible solo refleja la petición, se mostrará «Sin registrar» y la comprobación seguirá pendiente. Conservar únicamente identificadores y resultados necesarios, sin transcripciones.
+
+T001 deja preparada la prueba. Quedan por elegir B y comprobar la fuente concreta de confirmación del modelo disponible para las dos ejecuciones.
