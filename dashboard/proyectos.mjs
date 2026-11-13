@@ -5,7 +5,7 @@ import { pathToFileURL } from 'node:url';
 import { randomUUID } from 'node:crypto';
 import { parseFrontmatter } from '../scripts/lib/frontmatter.js';
 
-import { reconstruirIntentos } from './historial.mjs';
+import { leerRecorrido } from './historial.mjs';
 
 async function leerFichas(raiz) {
   const carpeta = join(await realpath(raiz), '02-DOCS/wiki/ftd');
@@ -21,7 +21,37 @@ async function leerFichas(raiz) {
     ids.add(id);
     const seccion = texto.split(/^## (?:Evidencia|Evidence)[ \t]*(?:\n|$)/im)[1];
     const evidencia = seccion?.split(/^#{1,2} /m)[0].trim() || null;
-    tareas.push({ historial: reconstruirIntentos(texto), evidencia, id, titulo: texto.match(/^# (.+)$/m)?.[1] || id,
+    const { intentos, movimientos } = leerRecorrido(texto);
+    const ultimoMovimiento = movimientos.at(-1);
+    let desdePaso = null, desdeEstado = null;
+    if (ultimoMovimiento) {
+      const comienzo = (misma) => {
+        let i = movimientos.length - 1;
+        while (i > 0 && misma(movimientos[i - 1])) i--;
+        return movimientos[i].fecha;
+      };
+      const mismoPaso = m => m.paso === ultimoMovimiento.paso && m.intento === ultimoMovimiento.intento;
+      desdePaso = comienzo(mismoPaso);
+      desdeEstado = comienzo(m => mismoPaso(m) && m.estado === ultimoMovimiento.estado);
+    }
+    const recibos = {};
+    const referencias = new Set(movimientos.map(m => m.fuente));
+    for (const enlace of (evidencia || '').matchAll(/\[[^\]\n]*\]\((evidencias\/[^)\s]+)\)/g)) referencias.add(enlace[1]);
+    for (const ref of referencias) {
+      const enFicha = /^evidencias\/(?:[\w-]+\/)*[\w-]+\.json$/.test(ref);
+      if (!enFicha && !/^pruebas\/(?:[\w-]+\/)*[\w-]+\.json$/.test(ref)) continue;
+      const ruta = join(enFicha ? carpeta : await realpath(raiz), ref);
+      try {
+        if (await realpath(ruta) !== ruta) continue;
+        const dato = JSON.parse(await readFile(ruta, 'utf8'));
+        // Exponer solo campos de recibos reconocidos, nunca la conversación o la entrada.
+        const resumen = r => Object.fromEntries(['proyecto','tarea','paso','intento','inicio','fin','ejecutor','agente','solicitado','confirmado','modelo_solicitado','modelo_confirmado','veredicto','origen'].filter(k => Object.hasOwn(r,k) && (r[k] === null || ['string','number'].includes(typeof r[k]))).map(k => [k,r[k]]));
+        const contenido = dato.primero && dato.siguiente ? { primero: resumen(dato.primero), siguiente: resumen(dato.siguiente) } : resumen(dato);
+        if (Object.keys(contenido).length) recibos[ref] = contenido;
+      } catch { /* Una referencia sin recibo legible conserva su nombre en la ficha. */ }
+    }
+    tareas.push({ recibos, historial: intentos, ultimoMovimiento, desdePaso, desdeEstado, paso: campos.paso,
+      motivo: campos.motivo || null, responsable: campos.responsable || null, evidencia, id, titulo: texto.match(/^# (.+)$/m)?.[1] || id,
       estado: campos.status || 'Sin registrar', fuente: '02-DOCS/wiki/ftd/' + archivo.name });
   }
   return tareas;
