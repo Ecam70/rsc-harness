@@ -1,0 +1,20 @@
+{
+  "proyecto": "A",
+  "tarea": "T007",
+  "paso": "revision",
+  "intento": "53fcd6f3-c612-411a-9f76-1aa7efdccfd6",
+  "inicio": "2026-11-13T14:46:21.834531+00:00",
+  "fin": "2026-11-13T14:46:28.454761+00:00",
+  "origen": "general",
+  "agente": "codex",
+  "solicitado": "gpt-6.1-sol",
+  "confirmado": "gpt-6.1-sol",
+  "sesion_sha256": "997c8fa219f7d347ef768ab0a6c17635bbab0f780d187894b9f022df7f1149fa",
+  "ficha_sha256": "202d25f2d70ca6df1cd4ef2eabb8901bc2d91f152d65374c020cf811267bebd5",
+  "resultado_sha256": "51aee6013cd728408b939645048b4c4672cd58f706f3549c6f5b60b18e27e6ab",
+  "respuestas": {
+    "f336b7ff10ef3b94c19b57c61e404bfd575a799b6e76ac1c3adbe99c37aa9499": "gpt-6.1-sol"
+  },
+  "veredicto": "FALLIDA",
+  "guia": "# Comprobar una tarea\n\nAbre el tablero local y elige el proyecto y la tarjeta de la tarea.\n"
+}

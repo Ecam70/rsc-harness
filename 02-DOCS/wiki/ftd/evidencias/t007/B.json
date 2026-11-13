@@ -1,0 +1,18 @@
+{
+  "proyecto": "B",
+  "tarea": "B-001",
+  "paso": "revision",
+  "intento": "9dc320cb-6ee2-4538-b0e9-a481dd6f27b7",
+  "inicio": "2026-11-13T14:47:21.364085+00:00",
+  "fin": "2026-11-13T14:47:29.554462+00:00",
+  "origen": "proyecto",
+  "agente": "codex",
+  "solicitado": "gpt-6-astra",
+  "confirmado": "gpt-6-astra",
+  "sesion_sha256": "10454a19c600cc1023f669987b1deb82e0b447278c9f56a08a36a63c99005b3f",
+  "ficha_sha256": "4000f5c06b0d7502e194c46c3d495cddd18eeba186978165ce2916e0c7d7026a",
+  "resultado_sha256": "8b120660bd8e51c474c136702ca39d8d61d1a93e0d15f86a0fb24ed629e2ea07",
+  "respuestas": {
+    "bb6e7e362d3ad95c2795c12d67b2f3943baffaa680a2ecb00bd41404bae4f049": "gpt-6-astra"
+  }
+}

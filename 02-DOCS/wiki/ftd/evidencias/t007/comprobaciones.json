@@ -1,0 +1,17 @@
+{
+  "pasos": [
+    {
+      "nombre": "Corrección, tercera revisión y salida única con recibo de cierre",
+      "fecha": "2026-11-13T14:47:21.155Z"
+    },
+    {
+      "nombre": "Revisión real B/B-001 con excepción",
+      "fecha": "2026-11-13T14:47:29.572Z"
+    },
+    {
+      "nombre": "Cancelación, registro anterior incompleto y pérdida de acceso a A",
+      "fecha": "2026-11-13T14:47:29.969Z"
+    }
+  ],
+  "primera_carga_ms": 60
+}
