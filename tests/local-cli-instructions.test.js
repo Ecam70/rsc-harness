@@ -1,3 +1,4 @@
+import { forkCli } from '../scripts/lib/fork-source.js';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, chmodSync, rmSync } from 'node:fs';
@@ -22,12 +23,12 @@ test('installed CLI is preferred in operational instructions; version pins and u
   await applyInstall(options);
   assert.match(text(root, '.rsc/skills/implement/SKILL.md'), /`rsc risk/);
   assert.doesNotMatch(text(root, '.rsc/skills/implement/SKILL.md'), /npx @ericrisco\/rsc risk/);
-  assert.match(text(root, '.rsc/skills/suggest/SKILL.md'), /npx @ericrisco\/rsc@<catalogVersion/);
+  assert.ok(text(root, '.rsc/skills/suggest/SKILL.md').includes(`${forkCli} sync`));
   assert.deepEqual(JSON.parse(text(root, '.claude/settings.json')).permissions, permissions);
   // Same-version sync notices the CLI disappeared and restores the runnable fallback.
   rmSync(exe);
   await applyInstall(options);
-  assert.match(text(root, '.rsc/skills/implement/SKILL.md'), /npx @ericrisco\/rsc risk/);
+  assert.ok(text(root, '.rsc/skills/implement/SKILL.md').includes(`${forkCli} risk`));
   assert.deepEqual(JSON.parse(text(root, '.claude/settings.json')).permissions, permissions);
 });
 
@@ -49,8 +50,8 @@ test('discovery ignores relative PATH entries and non-executable files; never ru
 
 test('rewriting leaves version pins, other packages and fallback instructions exact', () => {
   const source = '`npx @ericrisco/rsc risk`\nnpx -y @ericrisco/rsc doctor\nnpx @ericrisco/rsc@4.1.1 sync\nnpx @ericrisco/rsc@latest upgrade\nnpx @other/rsc risk';
-  assert.equal(cliInstructions(source, false), source);
-  assert.equal(cliInstructions(source, true), '`rsc risk`\nrsc doctor\nnpx @ericrisco/rsc@4.1.1 sync\nnpx @ericrisco/rsc@latest upgrade\nnpx @other/rsc risk');
+  assert.equal(cliInstructions(source, false), ['`' + forkCli + ' risk`', `${forkCli} doctor`, `${forkCli} sync`, `${forkCli} upgrade`, 'npx @other/rsc risk'].join('\n'));
+  assert.equal(cliInstructions(source, true), ['`rsc risk`', 'rsc doctor', `${forkCli} sync`, `${forkCli} upgrade`, 'npx @other/rsc risk'].join('\n'));
 });
 
 test('slash commands use the installed CLI and keep user command collisions', (t) => {

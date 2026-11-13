@@ -21,6 +21,7 @@ import { diagnose, repair } from './lib/repair.js';
 import { DEFAULT_SKILL_FLOOR, withDefaultSkillFloor } from './lib/default-skill-floor.js';
 import { RETIRED_SKILLS, replaceRetired } from './lib/retired-skills.js';
 import { readManifest, writeManifest } from './lib/manifest-file.js';
+import { forkCli } from './lib/fork-source.js';
 import { versionReport } from './lib/versions.js';
 import { templateAssets, targetName } from './lib/tools-skeleton.js';
 import {
@@ -29,6 +30,15 @@ import {
 } from './lib/onboarding.js';
 import { applyAcceptedOnboarding, verifyOnboarding, ensureHarnessSkeleton, harnessReadiness } from './lib/onboarding-apply.js';
 import { CONSTITUTION_PATH, constitutionIsDraft, ensureConstitutionDraft } from './lib/constitution-draft.js';
+
+import { altaProyecto } from './lib/dashboard-alta.js';
+import { crearTarea, registrarIntento } from './lib/tarea-crear.js';
+
+const dashboardQuestion = '¿Quieres ver este proyecto en tu dashboard local?';
+async function mostrarAlta(id) {
+  const alta = await altaProyecto(id);
+  say(alta.existente ? `Carpeta ya registrada con el ID ${alta.id}.` : `Proyecto registrado con el ID ${alta.id}.`);
+}
 
 const rawArgv = process.argv.slice(2);
 
@@ -41,12 +51,13 @@ if (['--version', '-v', 'version'].includes(rawArgv[0])) {
   const lines = [`rsc ${v.cli}`];
   if (v.installed) lines.push(`installed in this project: ${v.installed}${v.behind ? ' (behind)' : ''}`);
   else lines.push('installed in this project: none');
-  if (v.behind) lines.push('This project runs older hooks than this CLI. To catch up, run here:', '  npx @ericrisco/rsc@latest');
+  if (v.behind) lines.push('This project runs older hooks than this CLI. To catch up, run here:', `  ${forkCli} sync`);
   process.stdout.write(`${lines.join('\n')}\n`);
   process.exit(0);
 }
 const GENERAL_HELP = [
   'Use: npx @ericrisco/rsc onboard | reassess | add <id...> | install --profile <p> | consult "<text>" | list | capabilities [--full|gap-log] | audit | registry refresh | doctor | sync | agent-model <target> <model|inherit|status> | agents [status|reset <name|--all>] | memory <on|off|status|save|resume|learn|metrics> | risk [--base <ref>] [paths…] | spec gate [specs…] | review consolidate|ledger|escapes | ingest <file...> | copy check <file> | copy rules | sello <on|off|status|…> | worktrees [reap [path] [--confirm]] | backups | restore <id|latest> | upgrade | repair | uninstall <id...> | purge | help',
+  'rsc dashboard alta [ID] — da de alta la carpeta actual. rsc tarea crear ID "Título" — registra una tarea.',
   'Any command takes --target <claude|codex|cursor|copilot|gemini|…> (comma-separate for several)',
   '   → without it, rsc uses the assistant already installed here; if two are, it asks instead of guessing.',
 ].join('\n');
@@ -75,9 +86,9 @@ const PURGE_HELP = [
 // `--accompaniment` stays listed although the dial is retired: old scripts and agents still pass it,
 // and its value must keep being skipped rather than read as a command or a skill id.
 const GLOBAL_VALUE_FLAGS = new Set([
-  '--topic', '--target', '--technical-level', '--accompaniment', '--project-kind', '--goal', '--goal-base64', '--software-scope', '--workflow', '--accept-plan',
+  '--dashboard', '--topic', '--target', '--technical-level', '--accompaniment', '--project-kind', '--goal', '--goal-base64', '--software-scope', '--workflow', '--accept-plan',
 ]);
-const COMMANDS = new Set(['ingest', 'copy', 'onboard', 'reassess', 'add', 'install', 'consult', 'catalog', 'audit', 'list', 'doctor', 'memory', 'knowledge-sync', 'git-permissions', 'agent-model', 'agents', 'main', 'isolation', 'sync', 'backups', 'restore', 'upgrade', 'registry', 'worktrees', 'capabilities', 'review', 'risk', 'spec', 'sello', 'repair', 'uninstall', 'purge']);
+const COMMANDS = new Set(['dashboard', 'tarea', 'ingest', 'copy', 'onboard', 'reassess', 'add', 'install', 'consult', 'catalog', 'audit', 'list', 'doctor', 'memory', 'knowledge-sync', 'git-permissions', 'agent-model', 'agents', 'main', 'isolation', 'sync', 'backups', 'restore', 'upgrade', 'registry', 'worktrees', 'capabilities', 'review', 'risk', 'spec', 'sello', 'repair', 'uninstall', 'purge']);
 // Sync preserves project decisions. Only these explicit transitions clear an opt-out;
 // a missing local marker alone does not revoke a teammate's declared decision.
 const EXPLICIT_REARMS = {
@@ -120,6 +131,7 @@ function onboardingInput(targets) {
   };
   return {
     schemaVersion: 1,
+    dashboard: flag('dashboard'),
     technicalLevel: value('technical-level'),
     projectKind: value('project-kind'),
     goal: value('goal') || (value('goal-base64') ? decodeGoal(value('goal-base64')) : undefined),
@@ -134,10 +146,11 @@ function onboardingRequired(raw, action = 'onboard') {
     code: 'RSC_ONBOARDING_REQUIRED',
     schemaVersion: 1,
     missing: missingOnboardingFields(raw),
-    recovery: `Run npx @ericrisco/rsc@latest ${action} --technical-level <non-technical|mixed|technical> --project-kind <software|operations|research|content|mixed> --goal "<what you want>" --target <assistant> (software or mixed also: --software-scope <small|growing|complex> --workflow <main|branches>)`,
+    recovery: `Run ${forkCli} ${action} --technical-level <non-technical|mixed|technical> --project-kind <software|operations|research|content|mixed> --goal "<what you want>" --target <assistant> (software or mixed also: --software-scope <small|growing|complex> --workflow <main|branches>)`,
     // Each value is the person's own answer, asked as a question. Never infer one from the code or
     // from a nearby answer: a field test mapped «mixto» to technical and «growing» to small.
     ask: {
+      dashboard: dashboardQuestion + ' (--dashboard si|no)',
       'technical-level': 'Technical terms, or plain words with analogies? (non-technical | mixed | technical)',
       'project-kind': 'What is this project? (software | operations | research | content | mixed)',
       goal: 'What do you want this project to achieve?',
@@ -191,6 +204,7 @@ function renderPlan(plan, planId) {
   if (plan.record.softwareScope) say('AGENT: ask the person «¿Los cambios de código van directos a main, o con ramas y pull request?» (main | branches; branches is for long-lived, complex code). If their answer differs from the line above, generate the plan again with --workflow <answer>.');
   say('AGENT: before accepting, read these values back to the person and check each one is what they answered.');
   say(`Targets: ${plan.policy.targets.join(', ')}`);
+  say(plan.record.dashboard ? `Dashboard local: ${plan.record.dashboard}` : dashboardQuestion + ' (--dashboard si|no)');
   say('Selected:');
   for (const decision of plan.decisions.filter((d) => d.state === 'selected')) say(`  + ${decision.kind}/${decision.id} — ${decision.reason}`);
   say('Deferred:');
@@ -216,12 +230,13 @@ function renderPlan(plan, planId) {
   // depends on the catalog of the running version: `@latest` would accept it with whatever version
   // npm resolves next, which answers RSC_PLAN_CHANGED the day a release lands in between.
   const pieces = [
-    `npx @ericrisco/rsc@${versionReport(process.cwd()).cli} onboard`,
+    `${forkCli} onboard`,
     `--technical-level ${plan.record.technicalLevel}`,
     `--project-kind ${plan.record.projectKind}`,
     `--goal-base64 ${encodeGoal(plan.record.goal)}`,
     ...(plan.record.softwareScope ? [`--software-scope ${plan.record.softwareScope}`] : []),
     ...(plan.record.workflow ? [`--workflow ${plan.record.workflow}`] : []),
+    ...(plan.record.dashboard ? [`--dashboard ${plan.record.dashboard}`] : []),
     `--target ${plan.record.targets.join(',')}`,
     `--accept-plan ${planId}`,
   ];
@@ -269,6 +284,10 @@ async function runOnboarding(targets) {
     }
   }
   if (missingOnboardingFields(raw).length) return onboardingRequired(raw);
+  if (isInteractive() && !flag('accept-plan') && raw.dashboard === undefined) {
+    raw.dashboard = await select(dashboardQuestion, [{ key: 'si', label: 'Sí' }, { key: 'no', label: 'No' }]);
+    if (!raw.dashboard) return void say('Alta cancelada.');
+  }
   let record;
   try { record = normalizeOnboarding(raw); } catch (error) {
     console.error(`RSC_ONBOARDING_INVALID: ${error.message}`);
@@ -325,6 +344,13 @@ async function runOnboarding(targets) {
     if (kept) say(`Your previous ${path} is kept in ${kept}`);
   }
   emitHarnessReadiness(plan, planId);
+  if (plan.record.dashboard === 'si') {
+    try { await mostrarAlta(); }
+    catch (error) {
+      console.error(`Alta pendiente: ${error.message} Reintenta desde esta carpeta con rsc dashboard alta.`);
+      process.exitCode = 1;
+    }
+  }
 }
 
 // La única línea que afirmaba que el arnés estaba listo lo hacía sin mirar si existía: «completado»
@@ -363,7 +389,7 @@ function runReassessment() {
   const manifest = readManifest();
   const plan = manifest?.onboarding?.plan;
   if (!plan) {
-    console.error('RSC_ONBOARDING_REQUIRED: no accepted onboarding receipt. Run npx @ericrisco/rsc@latest onboard');
+    console.error(`RSC_ONBOARDING_REQUIRED: no accepted onboarding receipt. Run ${forkCli} onboard`);
     process.exitCode = 2;
     return;
   }
@@ -374,12 +400,13 @@ function runReassessment() {
   const record = recommendations[0].suggestedRecord || plan.record;
   say('Review a new plan; nothing has been installed:');
   say([
-    'npx @ericrisco/rsc@latest onboard',
+    `${forkCli} onboard`,
     `--technical-level ${record.technicalLevel}`,
     `--project-kind ${record.projectKind}`,
     `--goal-base64 ${encodeGoal(record.goal)}`,
     ...(record.softwareScope ? [`--software-scope ${record.softwareScope}`] : []),
     ...(record.workflow ? [`--workflow ${record.workflow}`] : []),
+    ...(record.dashboard ? [`--dashboard ${record.dashboard}`] : []),
     `--target ${record.targets.join(',')}`,
   ].join(' '));
   say('Show the new plan and ask the user to accept its id before applying it.');
@@ -791,6 +818,13 @@ async function main() {
       // Restoring what the project already declared is not a decision, so there is nothing to ask.
       if (!isInteractive()) return syncDeclared(targets);
       return wizard(f ? targets : null, targets);
+    case 'dashboard':
+      if (argv[1] !== 'alta' || argv.length > 3) throw new Error('Uso: rsc dashboard alta [ID]');
+      return mostrarAlta(argv[2]);
+    case 'tarea':
+      if (argv[1] === 'crear' && argv.length === 4) return say(await crearTarea(argv[2], argv[3]));
+      if (argv[1] === 'intento' && argv.length === 8) return say(await registrarIntento(...argv.slice(2)));
+      throw new Error('Uso: rsc tarea crear ID "Título" | rsc tarea intento TAREA MOVIMIENTO PASO NÚMERO ESTADO FUENTE');
     case 'onboard':
       return runOnboarding(f ? targets : []);
     case 'reassess':
@@ -1171,7 +1205,7 @@ async function main() {
       const dry = argv.includes('--dry-run');
       const global = argv.includes('--global');
       const result = runUpgrade({ targets, dryRun: dry, global });
-      if (result.ran) say('Upgraded global @ericrisco/rsc. Restart your shell if needed.');
+      if (result.ran) say('Upgraded global rsc from Ecam70/rsc-harness. Restart your shell if needed.');
       else say(`${dry ? 'Would run' : 'Upgrade guide'}: ${result.plan.installCommand}`);
       say(`After upgrade: ${result.plan.syncCommand}`);
       return;

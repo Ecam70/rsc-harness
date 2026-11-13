@@ -61,6 +61,7 @@ export function normalizeOnboarding(raw = {}) {
     : 'main';
   return {
     schemaVersion,
+    ...(raw.dashboard !== undefined ? { dashboard: oneOf('dashboard', raw.dashboard, ['si', 'no']) } : {}),
     technicalLevel,
     projectKind,
     goal,

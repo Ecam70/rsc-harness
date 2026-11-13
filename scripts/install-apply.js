@@ -5,6 +5,7 @@ import { join, dirname, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
 import { planInstall } from './install-plan.js';
+import { forkSource } from './lib/fork-source.js';
 import { installedCli, materializeCliInstructions } from './lib/cli-invocation.js';
 import { targetPaths, writeSkill, wireHook, unwireHook, baseDir, TARGET_IDS } from '../targets/index.js';
 import { shadowTarget } from '../targets/agents-md-shadow.js';
@@ -62,7 +63,7 @@ function writeBaseVersions(cwd, versions) {
 function ensureBase(id, cwd, baseVersions) {
   const dest = baseDir(id, cwd);
   const local = installedCli();
-  const stamp = `${CLI_VERSION}:${local ? 'rsc' : 'npx'}`;
+  const stamp = `${CLI_VERSION}:${forkSource.revision || 'eam'}:${local ? 'rsc' : 'npx'}`;
   const stale = baseVersions[id] !== stamp;
   if (stale && existsSync(dest)) rmSync(dest, { recursive: true, force: true });
   if (!existsSync(dest)) {
@@ -233,6 +234,7 @@ export function recordInManifest({ cwd, target, skillIds, agentIds = [], catalog
     agents: union(prev.agents, agentIds),
     ownSkills: prev.ownSkills || [],
     catalogVersion,
+    forkSource,
     tier: tier ?? prev.tier ?? null,
     optOuts: preserveOptOuts ? union(projectOptOuts(prev.optOuts), optOuts).filter(name => !rearmOptOuts.includes(name)) : optOuts ?? projectOptOuts(prev.optOuts),
     memory: prev.memory,
