@@ -6,12 +6,12 @@ tags: [sdd, spec]
 timestamp: 2026-11-13T11:21:57Z
 topic: sdd
 slug: ai-factory-primera-entrega
-status: draft
+status: approved
 ---
 
 # AI Factory · Primera entrega
 
-**Borrador para revisión.** Se rige por la [constitución v1.0.0](../constitution.md).
+**Especificación aprobada por el responsable del proyecto el 13 de noviembre de 2026.** Se rige por la [constitución v1.0.0](../constitution.md).
 
 ## Para quién y para qué
 
