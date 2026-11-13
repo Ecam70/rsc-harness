@@ -1,3 +1,4 @@
+import { intentosDeTarea } from './asignaciones.mjs';
 const columnas = ['Entrada', 'Preparación', 'Ejecución', 'Verificación', 'Salida'];
 export const esc = valor => String(valor ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
 const normal = s => String(s).normalize('NFD').replace(/\p{M}/gu,'').toLowerCase();
@@ -35,7 +36,28 @@ export function pagina(titulo,contenido) {
   return '<!doctype html><html lang="es"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>'+esc(titulo)+' · AI Factory</title><link rel="stylesheet" href="/tablero.css"><script defer src="/actualizar.js"></script><header><a href="/">AI Factory</a><a class="ajustes" href="/configuracion">Agentes y modelos</a></header><main>'+contenido+'</main></html>';
 }
 
-export function tablero(proyectos, params) {
+function asignaciones(proyectos, p, t, reglas) {
+  const propios = reglas?.proyectos?.[p.proyecto] ?? {};
+  const generales = reglas?.general ?? {};
+  const intentos = intentosDeTarea(proyectos,p.proyecto,t);
+  const pasos = new Set([...Object.keys(generales), ...Object.keys(propios)]);
+  const pasoActual=t.ultimoMovimiento?.paso || t.paso;
+  if (pasoActual) {
+    const nombre=normal(pasoActual).replaceAll(' ','-');
+    if (pasos.has(nombre) || !nombre.startsWith('revision-')) pasos.add(nombre);
+    else pasos.add('revision');
+  }
+  const previstas = [...pasos].map(paso=>{
+    const regla = propios[paso] ?? generales[paso];
+    const link='/configuracion?'+new URLSearchParams({proyecto:p.proyecto,paso});
+    return '<li><a href="'+esc(link)+'">'+esc(paso)+'</a> · '+(regla?esc(regla.agente)+' / '+esc(regla.modelo)+' · '+(propios[paso]?'Excepción del proyecto':'Regla general'):'Sin configurar')+'</li>';
+  }).join('');
+  const valor = v => esc(v ?? 'Sin registrar');
+  const filas = intentos.map(i=>'<tr><th scope="row">'+esc(i.paso)+'<br><small>'+esc(i.intento)+'</small></th><td>'+valor(i.agentePrevisto)+' / '+valor(i.modeloPrevisto)+'</td><td>'+valor(i.agenteUsado)+' / '+valor(i.modeloUsado)+'</td><td>'+fecha(i.inicio)+(i.enlace?'<br><a href="'+esc(i.enlace)+'">Recibo '+esc(i.fuente)+'</a>':'')+'</td></tr>').join('');
+  return '<section class="panel asignaciones"><h2>Agentes y modelos</h2><h3>Previsión para nuevos intentos</h3><ul>'+previstas+'</ul><h3>Registro de ejecución</h3>'+(filas?'<div class="tabla"><table><thead><tr><th>Paso e intento</th><th>Previstos al iniciar</th><th>Agente y modelo usados</th><th>Inicio y fuente</th></tr></thead><tbody>'+filas+'</tbody></table></div>':'<p>Sin registrar.</p>')+'</section>';
+}
+
+export function tablero(proyectos, params, reglas) {
   const filtro=params.get('proyecto') || '', id=params.get('tarea');
   const proyectosVista=proyectos.filter(p=>!filtro || p.proyecto===filtro);
   const filas=proyectosVista.flatMap(p=>p.tareas.map(t=>({p,t,s:situacion(t)})));
@@ -58,7 +80,7 @@ export function tablero(proyectos, params) {
       return i<0 ? original : '<a href="#recibo-'+i+'">'+label+'</a>';
     });
     const contexto = [t.motivo && 'Motivo: '+t.motivo, t.responsable && 'Responsable: '+t.responsable].filter(Boolean).map(x=>'<p>'+esc(x)+'</p>').join('');
-    return pagina(t.titulo, '<nav><a href="/?'+new URLSearchParams({proyecto:filtro})+'">← Tablero del proyecto '+esc(filtro)+'</a></nav>'+avisos+'<small>'+esc(p.proyecto)+' / '+esc(id)+'</small><h1>'+esc(t.titulo)+'</h1><section class="panel"><b>'+esc(s.columna)+' · '+esc(s.estado)+'</b>'+contexto+'<p>Paso: '+esc(s.paso)+' · Tiempo en el paso: '+duracion(s.desde)+'</p><small>Ficha: '+esc(t.fuente)+'</small></section><h2>Recorrido</h2>'+(intentos || '<p>Sin movimientos registrados.</p>')+'<section class="panel" id="evidencia"><h2>Evidencia</h2><div class="texto">'+evidencia+'</div>'+fuentes+'<p><a href="'+esc(api)+'/evidencia">Consultar registro de evidencia</a></p></section>');
+    return pagina(t.titulo, '<nav><a href="/?'+new URLSearchParams({proyecto:filtro})+'">← Tablero del proyecto '+esc(filtro)+'</a></nav>'+avisos+'<small>'+esc(p.proyecto)+' / '+esc(id)+'</small><h1>'+esc(t.titulo)+'</h1><section class="panel"><b>'+esc(s.columna)+' · '+esc(s.estado)+'</b>'+contexto+'<p>Paso: '+esc(s.paso)+' · Tiempo en el paso: '+duracion(s.desde)+'</p><small>Ficha: '+esc(t.fuente)+'</small></section>'+asignaciones(proyectos,p,t,reglas)+'<h2>Recorrido</h2>'+(intentos || '<p>Sin movimientos registrados.</p>')+'<section class="panel" id="evidencia"><h2>Evidencia</h2><div class="texto">'+evidencia+'</div>'+fuentes+'<p><a href="'+esc(api)+'/evidencia">Consultar registro de evidencia</a></p></section>');
   }
   const decisionSolo=params.get('vista')==='decisiones';
   const visibles=filas.filter(f=>!decisionSolo || decision(f.s.estado));

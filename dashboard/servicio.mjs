@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { resolve, dirname, join } from 'node:path';
-import { mostrar, guardar } from './configuracion.mjs';
+import { mostrar, guardar, reglasActuales } from './configuracion.mjs';
 import { tablero } from './tablero.mjs';
 import { createServer } from 'node:http';
 import { leerProyectos } from './proyectos.mjs';
@@ -48,7 +48,9 @@ const servicio = createServer(async (req, res) => {
     }
     const proyectos = await leerProyectos(config, almacen);
     if (ruta === '/') {
-      const html = tablero(proyectos, new URL(req.url, 'http://127.0.0.1').searchParams);
+      const params = new URL(req.url, 'http://127.0.0.1').searchParams;
+      const reglas = params.has('tarea') ? reglasActuales(join(dirname(resolve(config)), 'reglas-modelos.json')) : undefined;
+      const html = tablero(proyectos, params, reglas);
       res.writeHead(200, { 'Content-Type':'text/html; charset=utf-8', 'Cache-Control':'no-store',
         'Content-Security-Policy': "default-src 'none'; style-src 'self'; script-src 'self'; connect-src 'self'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'" });
       return res.end(html);

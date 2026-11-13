@@ -11,7 +11,7 @@ const plantilla = new URL('./reglas-modelos.json', import.meta.url);
 const opciones = (pares, actual) => pares.map(([id,nombre]) =>
   '<option value="'+esc(id)+'"'+(id===actual?' selected':'')+'>'+esc(nombre)+'</option>').join('');
 
-function reglasActuales(archivo) {
+export function reglasActuales(archivo) {
   return JSON.parse(readFileSync(existsSync(archivo) ? archivo : plantilla,'utf8'));
 }
 function exigir(condicion, mensaje) {
