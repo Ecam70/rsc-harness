@@ -38,9 +38,9 @@ Entregar las referencias de la tarea de A, la revisión fallida y su repetición
 
 ## T001 · Recorrido de referencia (en curso)
 
-**Proyecto A propuesto:** este fork. La tarea real elegida para la demostración es T002, «Registrar proyectos y leer sus fichas y referencias desde el servicio local». Se dará por entregada al poder abrir dos tareas con el mismo nombre en proyectos diferentes y conservar la última lectura fechada si se pierde acceso a uno. Deberán quedar vinculados el resultado de la prueba y el cambio revisado. Registrar su entrada y los intentos desde el comienzo de T002.
+**Proyecto A confirmado:** este fork. La tarea real elegida para la demostración es T002, «Registrar proyectos y leer sus fichas y referencias desde el servicio local». Se dará por entregada al poder abrir dos tareas con el mismo nombre en proyectos diferentes y conservar la última lectura fechada si se pierde acceso a uno. Deberán quedar vinculados el resultado de la prueba y el cambio revisado. Registrar su entrada y los intentos desde el comienzo de T002.
 
-**Proyecto B:** pendiente de elección del usuario. Puede ser otro proyecto local con rsc o un proyecto de demostración independiente con registros propios. La separación debe permitir ejecutar una revisión con una elección propia de B.
+**Proyecto B confirmado:** demostración independiente, con repositorio propio y ficha B-001 en 02-DOCS/wiki/ftd/revision-demo.md. La rama main de B parte del commit 03c895d.
 
 | Fuente contrastada | Dato disponible | Dato que queda por registrar |
 |---|---|---|
@@ -50,4 +50,15 @@ Entregar las referencias de la tarea de A, la revisión fallida y su repetición
 
 **Dos combinaciones candidatas para revisión:** Codex con gpt-6.1-sol (general) y Codex con gpt-6-astra (excepción de B). Ambos nombres figuran en el catálogo local. Para comprobarlas en T004 se asociará cada revisión a su proyecto, tarea e intento; se contrastará la asignación con el identificador del modelo devuelto por el ejecutor o proveedor para esa ejecución. Si la salida disponible solo refleja la petición, se mostrará «Sin registrar» y la comprobación seguirá pendiente. Conservar únicamente identificadores y resultados necesarios, sin transcripciones.
 
-T001 deja preparada la prueba. Quedan por elegir B y comprobar la fuente concreta de confirmación del modelo disponible para las dos ejecuciones.
+### Prueba de los ejecutores · 13 de noviembre de 2026
+
+Se ejecutaron dos revisiones documentales independientes con Codex CLI 0.167.0-alpha.4.1, en modo de solo lectura. Se proporcionó el texto de la ficha o del plan. Ambas terminaron correctamente. A localizó el criterio de cierre de T002 y B identificó B-001 y su criterio. Estos intentos de T001 son pruebas de la fuente de datos; la ejecución de T002 y la demostración del dashboard siguen pendientes.
+
+| Intento | Modelo solicitado y anotado por el ejecutor | Inicio y fin UTC | Huella SHA-256 del identificador de turno | Modelo servido confirmado |
+|---|---|---|---|---|
+| T001-A-01 | Codex / gpt-6.1-sol | 11:31:58 – 11:32:03 | 7bc77dbf0bbc81517d63ce74790b1424b03536dacf57267ab730a6d44b4a1d04 | Sin registrar |
+| T001-B-01 | Codex / gpt-6-astra | 11:31:58 – 11:32:04 | c48c9715ed83c36213b989f7cc1949223d38be79a303a360c3cb61821561d6e1 | Sin registrar |
+
+**Cómo reproducir el contraste.** En los registros locales de esos intentos, calcular SHA-256 del texto UTF-8 del identificador de turno, sin salto de línea. Unir el contexto del turno con el evento de finalización por ese identificador. El campo de modelo del contexto coincide con el parámetro de arranque. El evento de finalización aporta el intervalo y el resultado. En estos dos turnos no se encontró un campo de respuesta que identifique independientemente el modelo servido. La salida pública de este documento conserva solo las huellas y los datos de la tabla.
+
+**Criterio para T004.** Conservar por intento la asignación y el recibo de la respuesta del proveedor que identifique el modelo utilizado, vinculados por el identificador de respuesta y el turno. Si intervienen varias respuestas, asociarlas por separado al intento. Verificar el recibo en una ejecución real del adaptador antes de marcar el modelo como confirmado. El valor solicitado, la ausencia de un aviso de cambio de modelo y la declaración del propio asistente son insuficientes. Hasta disponer de ese recibo, el tablero mostrará el modelo solicitado y «Sin registrar» en el campo de uso confirmado.
