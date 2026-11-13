@@ -1,0 +1,20 @@
+{
+  "proyecto": "A",
+  "tarea": "T007",
+  "paso": "revision",
+  "intento": "a872f064-f82e-45d8-9df8-ac3d2359b16e",
+  "inicio": "2026-11-13T14:47:15.126975+00:00",
+  "fin": "2026-11-13T14:47:20.816782+00:00",
+  "origen": "general",
+  "agente": "codex",
+  "solicitado": "gpt-6-astra",
+  "confirmado": "gpt-6-astra",
+  "sesion_sha256": "e88992c3685ce1ae197b9b0230409b47dcfbb90bdbfa61e1665687f1daca878d",
+  "ficha_sha256": "1a7bb2766798c3c28f998a2b105b9f4491450af3dc8c12606bdb4b6194ad0568",
+  "resultado_sha256": "abca57270969f4a6fc8584cd1e3f7e96c6ba0bfe5634a0a57b2d34ec93d9934f",
+  "respuestas": {
+    "745da737935f95d2385b9583822af2997bc33d167d2ae526452f612b26aa720e": "gpt-6-astra"
+  },
+  "veredicto": "APROBADA",
+  "guia": "# Seguir una tarea hasta su cierre\n\n1. Con el servicio local activo, abre http://127.0.0.1:4319/ en tu navegador.\n2. Elige el proyecto en el filtro y pulsa Aplicar. Busca la tarjeta de la tarea en Salida y ábrela.\n3. En el detalle, ve a Evidencia. Pulsa el enlace Prueba de cierre (o el nombre del recibo), despliega el registro y contrasta el veredicto y la identidad de la tarea con el criterio de entrega.\n4. Pulsa Consultar registro de evidencia para comprobar el proyecto, el ID y la ruta de la ficha fuente.\n"
+}

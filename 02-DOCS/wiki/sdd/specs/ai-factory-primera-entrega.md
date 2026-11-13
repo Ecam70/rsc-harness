@@ -39,7 +39,9 @@ El usuario guarda una combinación general para un paso y puede elegir otra para
 
 El tablero funciona en el equipo del usuario y limita su lectura a los proyectos elegidos y a los registros necesarios. Las claves y conversaciones privadas quedan fuera de las vistas y del historial. Los pasos y estados se entienden por su texto. Las vistas, filtros y elecciones se pueden utilizar con teclado.
 
-## Prueba de aceptación con dos proyectos · pendiente de ejecutar
+## Prueba de aceptación con dos proyectos
+
+[Resultado de la ejecución del 13 de noviembre de 2026](../aceptacion/ai-factory-primera-entrega.md).
 
 Los nombres **A** y **B** identifican dos proyectos locales elegidos para la demostración. Usar dos combinaciones distintas de agente y modelo disponibles para el paso de revisión. Conservar las referencias a las fichas, los registros de los ejecutores y las pruebas de cierre para contrastarlas con el panel.
 

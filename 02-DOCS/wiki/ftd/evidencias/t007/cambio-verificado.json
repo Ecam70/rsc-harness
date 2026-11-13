@@ -1,0 +1,39 @@
+{
+  "cambio": "2026-11-13T14:47:53.704Z",
+  "primero": {
+    "proyecto": "A",
+    "tarea": "T007",
+    "paso": "revision",
+    "intento": "337c502d-df45-4a91-91af-679497947eda",
+    "inicio": "2026-11-13T14:47:52.354586+00:00",
+    "fin": "2026-11-13T14:47:59.628852+00:00",
+    "origen": "general",
+    "agente": "codex",
+    "solicitado": "gpt-6.1-sol",
+    "confirmado": "gpt-6.1-sol",
+    "sesion_sha256": "23fb6f2c1688fac99cf070c1aa3fa37eb1fd7ca2d2a5acf9ef01f72cffe84a9a",
+    "ficha_sha256": "bfbf15805367e5ac70da1e2cf48fa97e1cefc2dc6c465e3718957effd887fb0e",
+    "resultado_sha256": "371590eff97ce9ecfabcc0aa957ac7b57052ce49725af8790f9ca23d68328bef",
+    "respuestas": {
+      "2081aa9a7e390330f9578ad545f5e51fd642ac037afd45db96a93f620fd86fa8": "gpt-6.1-sol"
+    }
+  },
+  "siguiente": {
+    "proyecto": "A",
+    "tarea": "T007",
+    "paso": "revision",
+    "intento": "83f40c7d-a24d-4907-bea7-d4206f5f6f19",
+    "inicio": "2026-11-13T14:47:59.718778+00:00",
+    "fin": "2026-11-13T14:48:07.342659+00:00",
+    "origen": "general",
+    "agente": "codex",
+    "solicitado": "gpt-6-astra",
+    "confirmado": "gpt-6-astra",
+    "sesion_sha256": "ede884b59d4909c250b8cbba78d0fe12bce371572fe6327d00091a72670876cd",
+    "ficha_sha256": "bfbf15805367e5ac70da1e2cf48fa97e1cefc2dc6c465e3718957effd887fb0e",
+    "resultado_sha256": "11b563cc707dbddf3d4de89fbc6723f3f8b8a90a5bcb161ccca735815ea938f9",
+    "respuestas": {
+      "0eda7f75289e140aede311b83b67d8489e58bb5da10210d97561dab8f63a9f36": "gpt-6-astra"
+    }
+  }
+}

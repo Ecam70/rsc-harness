@@ -5,15 +5,18 @@ export function intentosDeTarea(proyectos, proyecto, tarea) {
     for (const [indice, [ruta, datos]] of Object.entries(ficha.recibos ?? {}).entries()) {
       for (const r of datos.primero && datos.siguiente ? [datos.primero, datos.siguiente] : [datos]) {
         const local = p.proyecto === proyecto && ficha.id === tarea.id;
-        const asociado = local && tarea.historial?.find(i =>
-          i.intento === r.intento && i.movimientos.some(m => m.fuente === ruta));
+        const vinculados = local ? (tarea.historial ?? []).filter(i =>
+          (!r.paso || i.paso === r.paso) && i.movimientos.some(m => m.fuente === ruta)) : [];
+        const asociado = vinculados.find(i => i.intento === r.intento) ??
+          (r.proyecto === proyecto && !datos.primero && vinculados.length === 1 ? vinculados[0] : undefined);
         if (r.tarea !== tarea.id || (r.proyecto ? r.proyecto !== proyecto : !asociado)) continue;
         if (r.intento == null) continue;
         const paso = r.paso ?? asociado?.paso;
         if (!paso) continue;
-        const clave = JSON.stringify([paso,r.intento]);
+        const intento = asociado?.intento ?? r.intento;
+        const clave = JSON.stringify([paso,intento]);
         intentos.set(clave, {
-          paso, intento:r.intento, inicio:r.inicio,
+          paso, intento, inicio:r.inicio ?? asociado?.movimientos[0]?.fecha,
           agentePrevisto:r.agente, modeloPrevisto:r.solicitado ?? r.modelo_solicitado,
           agenteUsado:r.ejecutor ?? r.agente, modeloUsado:r.confirmado ?? r.modelo_confirmado,
           fuente:p.proyecto+' / '+ficha.id, enlace:'/?'+new URLSearchParams({proyecto:p.proyecto,tarea:ficha.id})+'#recibo-'+indice

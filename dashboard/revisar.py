@@ -6,6 +6,7 @@ import json
 import os
 from pathlib import Path
 import subprocess
+import sys
 from uuid import uuid4
 
 
@@ -65,6 +66,10 @@ def ejecutar(args):
     intento = str(uuid4())
     inicio = datetime.now(timezone.utc).isoformat()
     consigna = "Revisa la ficha adjunta sin herramientas. Responde en una frase con el ID de la tarea y su criterio de cierre."
+    if args.consigna_stdin:
+        consigna = sys.stdin.read().strip()
+        if not consigna:
+            raise ValueError("La consigna está vacía")
     r = subprocess.run(["codex", "exec", "--ephemeral", "--ignore-user-config", "--ignore-rules",
                         "-s", "read-only", "-m", eleccion["modelo"], "--json", "-"],
                        input=consigna + "\n\n" + contenido, capture_output=True, text=True, cwd=raiz,
@@ -93,5 +98,6 @@ if __name__ == "__main__":
     parser.add_argument("proyecto")
     parser.add_argument("tarea")
     parser.add_argument("ficha")
+    parser.add_argument("--consigna-stdin", action="store_true", help="Leer el criterio de revisión por entrada estándar")
     parser.add_argument("--reglas", type=Path)
     raise SystemExit(0 if ejecutar(parser.parse_args()) else 2)

@@ -1,0 +1,10 @@
+{
+  "proyecto": "A",
+  "tarea": "T007",
+  "paso": "revision",
+  "intento": 2,
+  "veredicto": "FALLIDA",
+  "resultado_sha256": "51aee6013cd728408b939645048b4c4672cd58f706f3549c6f5b60b18e27e6ab",
+  "confirmado": null,
+  "nota": "El comprobador se detuvo antes de guardar el recibo completo. Hora exacta de fin sin registrar."
+}
