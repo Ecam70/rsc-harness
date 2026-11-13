@@ -15,3 +15,18 @@ test('el filtro de decisiones conserva el bloqueo y enlaza la espera más antigu
   assert.doesNotMatch(html,/Cancelada por el proyecto/);
   assert.match(tablero(proyectos,new URLSearchParams()),/0 entregadas · 1 canceladas/);
 });
+
+test('la espera más antigua respeta el filtro de decisiones y descarta una aprobación resuelta', () => {
+  const tarea = (id, estado, fecha) => ({
+    id, titulo:id, estado:'in-progress', desdeEstado:fecha,
+    ultimoMovimiento:{paso:'revisión', estado}
+  });
+  const proyectos=[{proyecto:'B', disponible:true, tareas:[
+    tarea('cola','En cola','2026-10-01'), tarea('consulta','Esperando decisión','2026-10-02'),
+    tarea('resuelta','Aprobada','2026-10-03'), tarea('sin-fecha','Esperando aprobación',null)
+  ]}];
+  const html=tablero(proyectos,new URLSearchParams('vista=decisiones'));
+  assert.match(html,/tarea=consulta">Abrir la espera más antigua/);
+  assert.match(html,/tarea=sin-fecha/);
+  assert.doesNotMatch(html,/tarea=(resuelta|cola)/);
+});

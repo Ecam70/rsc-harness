@@ -4,7 +4,7 @@ const normal = s => String(s).normalize('NFD').replace(/\p{M}/gu,'').toLowerCase
 const fecha = s => s ? new Date(s).toISOString().replace('T',' ').slice(0,19) + ' UTC' : 'Sin registrar';
 const url = (p,t) => '/?' + new URLSearchParams({ proyecto:p, tarea:t });
 const espera = e => /esper|bloque|pendiente|cola|waiting|blocked|queued/.test(normal(e));
-const decision = e => /aproba|decision|usuario|approval/.test(normal(e));
+const decision = e => espera(e) && /aprobacion|decision|usuario|approval/.test(normal(e));
 
 export function situacion(t) {
   const ultimo = t.ultimoMovimiento ?? t.historial?.at(-1)?.movimientos.at(-1);
@@ -62,7 +62,7 @@ export function tablero(proyectos, params) {
   }
   const decisionSolo=params.get('vista')==='decisiones';
   const visibles=filas.filter(f=>!decisionSolo || decision(f.s.estado));
-  const cola=filas.filter(f=>f.s.esperaDesde).sort((a,b)=>Date.parse(a.s.esperaDesde)-Date.parse(b.s.esperaDesde));
+  const cola=visibles.filter(f=>f.s.esperaDesde).sort((a,b)=>Date.parse(a.s.esperaDesde)-Date.parse(b.s.esperaDesde));
   const enlace=f=>esc(url(f.p.proyecto,f.t.id));
   const tarjetas=grupo=>grupo.map(f=>'<a class="card" href="'+enlace(f)+'"><small>'+esc(f.p.proyecto)+' / '+esc(f.t.id)+'</small><strong>'+esc(f.t.titulo)+'</strong><span>'+esc(f.s.estado)+'</span><small>Paso: '+esc(f.s.paso)+'<br>Tiempo: '+duracion(f.s.desde)+'</small></a>').join('');
   const grupos=[...columnas,...(visibles.some(f=>f.s.columna==='Sin clasificar')?['Sin clasificar']:[])];
