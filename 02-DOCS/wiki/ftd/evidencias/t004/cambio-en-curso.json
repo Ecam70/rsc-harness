@@ -1,0 +1,48 @@
+{
+  "proyecto": "A",
+  "tarea": "T002",
+  "reglas": "copia temporal de dashboard/reglas-modelos.json",
+  "observacion": {
+    "turno_iniciado": "2026-11-13T12:44:58.851999+00:00",
+    "cambio": "2026-11-13T12:44:58.853730+00:00",
+    "anterior": "gpt-6.1-sol",
+    "nuevo": "gpt-6-astra",
+    "turno_terminado": "2026-11-13T12:45:04.964745+00:00"
+  },
+  "primero": {
+    "proyecto": "A",
+    "tarea": "T002",
+    "paso": "revision",
+    "intento": "ef2934d0-7ad2-43e8-a419-4fd78bec0237",
+    "inicio": "2026-11-13T12:44:57.753154+00:00",
+    "fin": "2026-11-13T12:45:05.440641+00:00",
+    "origen": "general",
+    "agente": "codex",
+    "solicitado": "gpt-6.1-sol",
+    "confirmado": "gpt-6.1-sol",
+    "sesion_sha256": "d71bfe0807bf538d1489a4fb284337649172ac33eb40bc0997600652f43c0368",
+    "ficha_sha256": "0c65cdb8a8b9223168c06f11b884f2a02d16ba377f62c50ef7cc2e2660399661",
+    "resultado_sha256": "e7c7e87577ed011160e6d770be28455cb2e79694af4e964424b89a4ea1d4f2cf",
+    "respuestas": {
+      "2bfffa64ff0a600973954c803ad69cca75e196f5025a6ab7916e94273b7e09ec": "gpt-6.1-sol"
+    }
+  },
+  "siguiente": {
+    "proyecto": "A",
+    "tarea": "T002",
+    "paso": "revision",
+    "intento": "726e92b4-76ad-49fd-a456-5ae59481365b",
+    "inicio": "2026-11-13T12:45:05.521765+00:00",
+    "fin": "2026-11-13T12:45:13.078010+00:00",
+    "origen": "general",
+    "agente": "codex",
+    "solicitado": "gpt-6-astra",
+    "confirmado": "gpt-6-astra",
+    "sesion_sha256": "848bd1ac03ae87916bf7fe0cd8a84c84ba3c41cfbfe26c8e25001f0a78498db4",
+    "ficha_sha256": "0c65cdb8a8b9223168c06f11b884f2a02d16ba377f62c50ef7cc2e2660399661",
+    "resultado_sha256": "214cb6a65cf68534dba18239234a0a09ba5ee5e838896a1778f917778f7fe061",
+    "respuestas": {
+      "5777a471033892ff6a3f77cff2429e2f8feb4dd223acd42a7a2598af0cefe7de": "gpt-6-astra"
+    }
+  }
+}
