@@ -2,6 +2,7 @@
 import { open, readFile, mkdir, rename, unlink, lstat, realpath, stat } from 'node:fs/promises';
 import { dirname, isAbsolute, join, resolve } from 'node:path';
 import { randomUUID, createHash } from 'node:crypto';
+import { isDeepStrictEqual } from 'node:util';
 import { errorPerfil, validarRegistro, validarReglas } from './contrato.mjs';
 import { aplicarOperacion } from './gestion-proyectos.mjs';
 
@@ -72,6 +73,7 @@ export async function conBloqueo(perfil,fn) {
 function metadata(s) { return {version:1,protocoloConsumidor:1,revision:s.revision,perfilId:s.perfilId,retirados:s.retirados,lecturasActuales:s.lecturasActuales,lecturasHistoricas:s.lecturasHistoricas}; }
 function validarRef(ref) {
   if(!ref || !uuid.test(ref.uid) || !uuid.test(ref.segmento) || !Number.isSafeInteger(ref.ubicacion) || ref.ubicacion<1 || typeof ref.raiz!=='string' || !isAbsolute(ref.raiz) || typeof ref.fecha!=='string' || !Number.isFinite(Date.parse(ref.fecha)) || !/^lecturas\/v1\/[0-9a-f-]{36}\/[0-9a-f-]{36}\.json$/i.test(ref.archivo) || !/^[a-f0-9]{64}$/.test(ref.sha256)) throw errorPerfil('INVALID_PROFILE','Una referencia de lectura no es válida.');
+  if(ref.comprobadaEn!==undefined && (typeof ref.comprobadaEn!=='string' || !Number.isFinite(Date.parse(ref.comprobadaEn)))) throw errorPerfil('INVALID_PROFILE','Fecha de comprobación no válida.');
 }
 function validarSnapshot(s) {
   if(s.protocolo!==1 || !uuid.test(s.perfilId) || !Number.isSafeInteger(s.revision) || s.revision<0 || !Array.isArray(s.retirados) || !Array.isArray(s.lecturasActuales) || !Array.isArray(s.lecturasHistoricas)) throw errorPerfil('INVALID_PROFILE','Metadatos de perfil no válidos.');
@@ -187,6 +189,21 @@ export async function publicarLectura(perfil,lectura) {
   return conBloqueo(perfil,async()=>{
     const s=await cargar(perfil), p=s.proyectos.find(p=>p.uid===lectura.uid);
     const actual=!!p && ['ubicacion','segmento','raiz'].every(k=>p[k]===lectura[k]) && (p.identidadDirectorio===null || p.identidadDirectorio===lectura.identidadDirectorio);
+    const anterior=actual && s.lecturasActuales.find(r=>r.uid===p.uid);
+    if(anterior) {
+      const {fecha:fechaAnterior,...contenidoAnterior}=await contenidoRef(perfil,anterior);
+      const {fecha,...contenido}=lectura;
+      // Compara la representación persistida: JSON omite los campos opcionales undefined.
+      if(isDeepStrictEqual(contenidoAnterior,parse(bytes(contenido)))) {
+        if(typeof fecha!=='string' || !Number.isFinite(Date.parse(fecha))) throw errorPerfil('INVALID_PROFILE','Fecha de lectura no válida.');
+        // La captura y su huella permanecen inmutables; sólo avanza la última comprobación.
+        if(Date.parse(fecha)>Date.parse(anterior.comprobadaEn ?? fechaAnterior)) {
+          anterior.comprobadaEn=fecha;
+          await atomico(join(perfil,'estado.json'),bytes(metadata(s)));
+        }
+        return {actual};
+      }
+    }
     const ref=await guardarLectura(perfil,lectura);
     if(actual) {
       s.lecturasHistoricas.push(...s.lecturasActuales.filter(r=>r.uid===p.uid));
@@ -202,7 +219,7 @@ export async function leerLecturas(perfil,snapshot) {
     const resultado=[], vistos=new Set();
     for(const [refs,historica] of [[s.lecturasActuales,false],[s.lecturasHistoricas,true],[s.retirados.flatMap(r=>r.lecturas),true]]) for(const ref of refs) {
       if(vistos.has(ref.archivo)) continue; vistos.add(ref.archivo);
-      resultado.push({...await contenidoRef(perfil,ref),archivo:ref.archivo,sha256:ref.sha256,historica});
+      resultado.push({...await contenidoRef(perfil,ref),archivo:ref.archivo,sha256:ref.sha256,comprobadaEn:ref.comprobadaEn ?? ref.fecha,historica});
     }
     return resultado;
   });

@@ -1,5 +1,7 @@
 """Contrato compartido con el tablero. Solo datos temporales, sin llamadas a agentes."""
 import importlib.util
+import contextlib
+import io
 import json
 from pathlib import Path
 import tempfile
@@ -20,7 +22,9 @@ class PerfilTest(unittest.TestCase):
         self.carpeta = self.root / "una carpeta ñ"
         self.carpeta.mkdir()
         self.config = self.root / "proyectos.json"
-        self.escribir("proyectos.json", [dict(id="Nuevo", aliases=["Antiguo"], uid="uid-1", raiz=str(self.carpeta), ubicacion=2, segmento="segmento-1")])
+        info = self.carpeta.stat()
+        self.identidad = f"{info.st_dev}:{info.st_ino}"
+        self.escribir("proyectos.json", [dict(id="Nuevo", aliases=["Antiguo"], uid="uid-1", raiz=str(self.carpeta), ubicacion=2, segmento="segmento-1", identidadDirectorio=self.identidad)])
         self.escribir("estado.json", dict(version=1, protocoloConsumidor=1, revision=4))
         self.reglas = dict(general=dict(revision=dict(agente="codex", modelo="general")), proyectos=dict(Nuevo=dict(revision=dict(agente="codex", modelo="especial"))))
         self.escribir("reglas-modelos.json", self.reglas)
@@ -67,6 +71,54 @@ class PerfilTest(unittest.TestCase):
         self.escribir("proyectos.json",[dict(id="Nuevo",raiz=str(self.carpeta))])
         contexto=perfil.tomar_intento(self.config,"Nuevo")
         self.assertEqual(contexto["eleccion"]["modelo"],"especial")
+
+    def test_directorio_desaparecido_o_reemplazado_no_inicia_intento(self):
+        antes = self.config.read_bytes()
+        self.carpeta.rename(self.root / "original")
+        with self.assertRaises(FileNotFoundError):
+            perfil.tomar_intento(self.config, "Nuevo")
+        self.carpeta.mkdir()
+        with self.assertRaisesRegex(ValueError, "FOLDER_REPLACED"):
+            perfil.tomar_intento(self.config, "Nuevo")
+        self.assertEqual(self.config.read_bytes(), antes)
+        self.assertFalse(Path(str(self.config) + ".lock").exists())
+
+    def test_identidad_desconocida_usa_solo_lectura_actual_de_la_misma_procedencia(self):
+        proyecto = json.loads(self.config.read_text())[0]
+        proyecto["identidadDirectorio"] = None
+        self.escribir("proyectos.json", [proyecto])
+        self.assertEqual(perfil.tomar_intento(self.config, "Nuevo")["uid"], "uid-1")
+        self.carpeta.rename(self.root / "original")
+        self.carpeta.mkdir()
+        ref = {k: proyecto[k] for k in ("uid", "ubicacion", "segmento", "raiz")}
+        ref["identidadDirectorio"] = self.identidad
+        estado = dict(version=1, protocoloConsumidor=1, revision=4)
+        self.escribir("estado.json", dict(estado, lecturasActuales=[ref]))
+        with self.assertRaisesRegex(ValueError, "FOLDER_REPLACED"):
+            perfil.tomar_intento(self.config, "Nuevo")
+        for campo, valor in [("uid", "otro"), ("ubicacion", 1), ("segmento", "otro"), ("raiz", str(self.root))]:
+            with self.subTest(campo=campo):
+                self.escribir("estado.json", dict(estado, lecturasActuales=[dict(ref, **{campo: valor})]))
+                self.assertEqual(perfil.tomar_intento(self.config, "Nuevo")["uid"], "uid-1")
+        self.escribir("estado.json", dict(estado, lecturasActuales=[], lecturasHistoricas=[ref]))
+        self.assertEqual(perfil.tomar_intento(self.config, "Nuevo")["uid"], "uid-1")
+
+    def test_ejecutor_rechaza_reemplazo_sin_agente_ni_recibo(self):
+        s = importlib.util.spec_from_file_location("revisar", Path(__file__).resolve().parents[1]/"scripts/ai-factory/revisar.py")
+        revisar = importlib.util.module_from_spec(s)
+        s.loader.exec_module(revisar)
+        args = SimpleNamespace(proyectos=self.config, proyecto="Nuevo", tarea="T", ficha="t.md", reglas=None, consigna_stdin=False)
+        self.carpeta.rename(self.root / "original")
+        with patch.object(revisar.subprocess, "run") as agente, contextlib.redirect_stdout(io.StringIO()) as salida:
+            with self.assertRaises(FileNotFoundError):
+                revisar.ejecutar(args)
+            fichas = self.carpeta / "02-DOCS/wiki/ftd"
+            fichas.mkdir(parents=True)
+            (fichas / "t.md").write_text("---\nid: T\n---\n# Otro proyecto\n", encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "FOLDER_REPLACED"):
+                revisar.ejecutar(args)
+        agente.assert_not_called()
+        self.assertEqual(salida.getvalue(), "")
 
     def test_ejecutor_emite_identidad_y_libera_lock_antes_del_agente(self):
         s = importlib.util.spec_from_file_location("revisar", Path(__file__).resolve().parents[1]/"scripts/ai-factory/revisar.py")

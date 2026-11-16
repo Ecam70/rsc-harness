@@ -92,6 +92,15 @@ def tomar_intento(config, proyecto, paso="revision", reglas_externas=None):
         raiz = Path(p["raiz"]).resolve(strict=True)
         if not raiz.is_dir():
             raise ValueError("La raíz del proyecto no es una carpeta")
+        identidad = p.get("identidadDirectorio")
+        if identidad is None:
+            lectura = next((l for l in estado.get("lecturasActuales", [])
+                            if all(l.get(k) == p.get(k) for k in ("uid", "ubicacion", "segmento", "raiz"))), {})
+            identidad = lectura.get("identidadDirectorio")
+        if identidad is not None:
+            info = raiz.stat()
+            if f"{info.st_dev}:{info.st_ino}" != identidad:
+                raise ValueError("FOLDER_REPLACED: la carpeta fue reemplazada; confirma su ubicación en el tablero antes de revisarla")
         archivo = Path(reglas_externas) if reglas_externas is not None else perfil / "reglas-modelos.json"
         # Sólo perfiles v1 sin migrar pueden carecer del archivo materializado de reglas.
         if reglas_externas is None and not archivo.exists() and not estado:
