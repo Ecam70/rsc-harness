@@ -1,0 +1,4 @@
+{
+  "general": {"revision": {"agente": "codex", "modelo": "general-fixture"}},
+  "proyectos": {"Nuevo": {"revision": {"agente": "codex", "modelo": "especial-fixture"}}}
+}

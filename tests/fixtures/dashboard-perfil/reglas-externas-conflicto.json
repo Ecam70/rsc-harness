@@ -1,0 +1,7 @@
+{
+  "general": {"revision": {"agente": "codex", "modelo": "general-externo"}},
+  "proyectos": {
+    "A": {"revision": {"agente": "codex", "modelo": "primero"}},
+    "Nuevo": {"revision": {"agente": "codex", "modelo": "distinto"}}
+  }
+}
