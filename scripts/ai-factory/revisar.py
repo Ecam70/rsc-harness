@@ -1,5 +1,6 @@
 """Ejecuta una revisión documental de un proyecto registrado y conserva su recibo."""
 import argparse
+import importlib.util
 from datetime import datetime, timezone
 from hashlib import sha256
 import json
@@ -8,6 +9,10 @@ from pathlib import Path
 import subprocess
 import sys
 from uuid import uuid4
+
+_spec = importlib.util.spec_from_file_location("ai_factory_perfil", Path(__file__).with_name("perfil.py"))
+_perfil = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(_perfil)
 
 
 def huella(texto):
@@ -38,28 +43,19 @@ def confirmar(lineas, final):
 
 
 def ejecutar(args):
-    proyecto, tarea = args.proyecto, args.tarea
-    config = json.loads(args.proyectos.read_text())
-    raices = [Path(p["raiz"]).resolve(strict=True) for p in config if p["id"] == proyecto]
-    if len(raices) != 1:
-        raise ValueError("Proyecto no registrado o ambiguo")
-    archivo = args.reglas or args.proyectos.resolve().with_name("reglas-modelos.json")
-    if args.reglas is None and not archivo.exists():
-        archivo = Path(__file__).with_name("reglas-modelos.json")
-    reglas = json.loads(archivo.read_text())
-    especial = reglas["proyectos"].get(proyecto, {})
-    origen = "proyecto" if "revision" in especial else "general"
-    eleccion = (especial if origen == "proyecto" else reglas["general"])["revision"]
+    contexto = _perfil.tomar_intento(args.proyectos, args.proyecto, reglas_externas=args.reglas)
+    proyecto, tarea = contexto["id"], args.tarea
+    eleccion, origen = contexto["eleccion"], contexto["origen"]
     if eleccion["agente"] != "codex":
         raise ValueError("Ejecutor sin adaptador")
-    raiz, = raices
+    raiz = Path(contexto["raiz"])
     carpeta = raiz / "02-DOCS/wiki/ftd"
     if carpeta.resolve() != carpeta or Path(args.ficha).name != args.ficha or not args.ficha.endswith(".md"):
         raise ValueError("Ficha no permitida")
     ficha = carpeta / args.ficha
     if ficha.is_symlink():
         raise ValueError("La ficha debe ser un archivo del proyecto")
-    contenido = ficha.read_text()
+    contenido = ficha.read_text(encoding="utf-8")
     campos = contenido.split("---", 2)
     if len(campos) != 3 or campos[0] or f"id: {tarea}" not in campos[1].splitlines():
         raise ValueError("La ficha no corresponde a la tarea")
@@ -72,7 +68,7 @@ def ejecutar(args):
             raise ValueError("La consigna está vacía")
     r = subprocess.run(["codex", "exec", "--ephemeral", "--ignore-user-config", "--ignore-rules",
                         "-s", "read-only", "-m", eleccion["modelo"], "--json", "-"],
-                       input=consigna + "\n\n" + contenido, capture_output=True, text=True, cwd=raiz,
+                       input=consigna + "\n\n" + contenido, capture_output=True, text=True, encoding="utf-8", cwd=raiz,
                        env={**os.environ, "NO_COLOR": "1", "RUST_LOG": "tungstenite::protocol=trace,codex_api::sse::responses=trace"},
                        timeout=180)
     eventos = [json.loads(l) for l in r.stdout.splitlines() if l.startswith("{")]
@@ -88,11 +84,17 @@ def ejecutar(args):
                   solicitado=eleccion["modelo"], confirmado=next(iter(modelos)) if len(modelos)==1 else None,
                   sesion_sha256=huella(turno), ficha_sha256=huella(contenido), resultado_sha256=huella(final),
                   respuestas=respuestas)
+    recibo.update(revision_perfil=contexto["revision"], reglas_sha256=contexto["reglasSha256"])
+    if contexto["uid"] is not None:
+        recibo.update(proyecto_uid=contexto["uid"], ubicacion=contexto["ubicacion"], segmento=contexto["segmento"])
     print(json.dumps(recibo, ensure_ascii=False, indent=2))
     return recibo["confirmado"] == recibo["solicitado"]
 
 
 if __name__ == "__main__":
+    if sys.argv[1:] == ["--capacidades"]:
+        print(json.dumps(_perfil.capacidades_consumidor()))
+        raise SystemExit(0)
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("proyectos", type=Path)
     parser.add_argument("proyecto")

@@ -1,0 +1,4 @@
+{
+  "general": { "revision": { "agente": "codex", "modelo": "gpt-6.1-sol" } },
+  "proyectos": { "B": { "revision": { "agente": "codex", "modelo": "gpt-6-astra" } } }
+}

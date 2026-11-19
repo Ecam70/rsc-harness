@@ -12,3 +12,7 @@ El fork escribe fichas, movimientos y recibos. El dashboard lee estos documentos
 | Reglas | `reglas-modelos.json`, junto al registro, contiene `general[paso]` y `proyectos[id][paso]`. Cada elección contiene `agente` y `modelo`. El ejecutor toma la excepción si existe y fija su elección al comenzar cada intento. |
 
 El número de versión identifica este contrato. Una ampliación compatible conserva el significado de los campos anteriores. Un cambio incompatible requiere otra versión y una prueba de lectura de las fichas históricas.
+
+## Perfil coordinado opcional
+
+El [protocolo de perfil 1](ai-factory-perfil-v1.md) añade identidad estable, alias, ubicación y segmento sin reescribir recibos anteriores. Los recibos nuevos pueden incluir `proyecto_uid`, `ubicacion`, `segmento`, `revision_perfil` y `reglas_sha256`. El ID visible del recibo sigue siendo el capturado al comenzar; un renombrado posterior no modifica su contenido.

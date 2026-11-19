@@ -17,6 +17,8 @@ jobs:
         run: npm run manifest:check
       - name: tests
         run: npm test
+      - name: Contrato Python del ejecutor del tablero
+        run: python3 tests/dashboard-perfil_test.py
       - name: eval-lint
         run: bash scripts/eval-lint.sh
       - name: drift-check (every prose link in the catalog resolves)
